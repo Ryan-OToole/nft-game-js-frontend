@@ -5,8 +5,10 @@ import myEpicGame from '../../utils/MyEpicGame.json';
 import './SelectCharacter.css';
 
 const SelectCharacter = ({ setCharacterNFT }) => {
+
     const [characters, setCharacters] = useState([]);
     const [gameContract, setGameContract] = useState(null);
+    const [provider, setProvider] = useState(null);
 
     const mintCharacterNFTAction = async (characterId) => {
         try {
@@ -32,7 +34,7 @@ const SelectCharacter = ({ setCharacterNFT }) => {
                 <button
                     type="button"
                     className="character-mint-button"
-                    // onClick={()=> mintCharacterNFTAction(index)}
+                    onClick={()=> mintCharacterNFTAction(index)}
                 >{`Mint ${character.name}`}</button>
             </div>
     ));
@@ -40,8 +42,20 @@ const SelectCharacter = ({ setCharacterNFT }) => {
     useEffect( () => {
         const {ethereum} = window;
 
+        const onCharacterMint = async (sender, tokenId, characterIndex) => {
+            console.log(
+                `CharacterNFTMinted - sender: ${sender} tokenId: ${tokenId.toNumber()} characterIndex: ${characterIndex.toNumber()}`
+              );
+              if (gameContract) {
+                const characterNFT = await gameContract.checkIfUserHasNFT();
+                console.log('CharacterNFT: ', characterNFT);
+                setCharacterNFT(transformCharacterData(characterNFT));
+              }
+        }
+
         if (ethereum) {
             const provider = new ethers.providers.Web3Provider(ethereum);
+            setProvider(provider);
             const signer = provider.getSigner();
             const gameContract = new ethers.Contract(
                 CONTRACT_ADDRESS,
@@ -49,12 +63,22 @@ const SelectCharacter = ({ setCharacterNFT }) => {
                 signer
             );
             setGameContract(gameContract);
+            provider.on("CharacterNftMinted", onCharacterMint)
         }
         else {
             console.log('Ethereum object not found');
 
         }
-    }, []);
+
+        return () => {
+            /*
+             * When your component unmounts, let;s make sure to clean up this listener
+             */
+            if (gameContract) {
+              provider.off('CharacterNFTMinted', onCharacterMint);
+            }
+          };
+    }, [gameContract, provider, setCharacterNFT]);
 
     useEffect( () => {
         const getCharacter = async () => {
