@@ -6,6 +6,7 @@ import Arena from './Components/Arena';
 import { CONTRACT_ADDRESS, transformCharacterData } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
 import { ethers } from 'ethers';
+import LoadingIndicator from './Components/LoadingIndicator';
 
 // Constants
 const TWITTER_HANDLE = 'web3ForToday';
@@ -15,6 +16,7 @@ const App = () => {
 
   const [currentAccount, setCurrentAccount] = useState(null);
   const [characterNFT, setCharacterNFT] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -22,6 +24,7 @@ const App = () => {
 
       if (!ethereum) {
         console.log('Make sure you have MetaMask!');
+        setIsLoading(false);
         return;
       } else {
         console.log('We have the ethereum object', ethereum);
@@ -40,9 +43,13 @@ const App = () => {
     catch(e) {
       console.log(e);
     }
+    setIsLoading(false);
   }
 
   const renderContent = () => {
+    if (isLoading) {
+     return <LoadingIndicator />;
+    }
     if (!currentAccount) {
       return (
         <div className="connect-wallet-container">
@@ -56,11 +63,13 @@ const App = () => {
       </div>
       );
     }
-    else if (currentAccount && !characterNFT) {
-      return (<SelectCharacter setCharacterNFT={setCharacterNFT} />); 
+    else if ((currentAccount && !characterNFT) || (currentAccount && characterNFT.hp === 0)) {
+      
+      return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} />); 
     }
     else if (currentAccount && characterNFT) {
-      return (<Arena characterNFT={characterNFT}/>);
+      console.log('***characterNFT.hp***', characterNFT.hp);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount}/>);
     }
   }
 
@@ -97,12 +106,13 @@ const App = () => {
     }
   }
 
-
-
   useEffect(() => {
+    setIsLoading(true);
     checkIfWalletIsConnected();
     checkNetwork();
+  }, []);
 
+  useEffect(() => {
     const fetchNftMetadata = async () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -113,15 +123,16 @@ const App = () => {
         signer
       );
       const txn = await gameContract.checkIfUserHasNFT();
+
       if (txn.name) {
         console.log('User has character NFT***');
         console.log('transformCharacterData(txn)', transformCharacterData(txn));
         setCharacterNFT(transformCharacterData(txn));
+
       }
-      else {
-        console.log('No character NFT found');
-      }
+      setIsLoading(false);
     }
+
     if (currentAccount) {
       console.log('currentAccount', currentAccount);
       fetchNftMetadata();

@@ -3,12 +3,15 @@ import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, transformCharacterData } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
+import LoadingIndicator from '../../Components/LoadingIndicator';
 
-const Arena = ({ characterNFT }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
+
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         const { ethereum } = window;
@@ -33,10 +36,37 @@ const Arena = ({ characterNFT }) => {
             const bossTxn = await gameContract.getBigBoss();
             setBoss(transformCharacterData(bossTxn));
         }
+        const onAttackComplete = (from, newBossHP, newPlayerHP) => {
+            const bossHP = newBossHP.toNumber();
+            const playerHP = newPlayerHP.toNumber();
+            const sender = from.toString();
+
+            console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP}`);
+
+            if (currentAccount === sender.toLowerCase()) {
+                setBoss((prevState) => {
+                    return {...prevState, hp: bossHP};
+                });
+                setCharacterNFT((prevState) => {
+                    return {...prevState, hp: playerHP};
+                });
+            }
+            else {
+                setBoss((prevState) => {
+                    return {...prevState, hp: bossHP};
+                });
+            }
+        }
         if (gameContract) {
             fetchBoss();
+            gameContract.on('AttackComplete', onAttackComplete);
         }
-    }, [gameContract]);
+        return () => {
+            if (gameContract) {
+                gameContract.off('AttackComplete', onAttackComplete);
+            }
+        }
+    }, [gameContract, currentAccount, setCharacterNFT]);
 
     const runAttackAction = async () => {
         try {
@@ -47,6 +77,10 @@ const Arena = ({ characterNFT }) => {
                 await attackTxn.wait();
                 console.log('attackTxn', attackTxn);
                 setAttackState('hit');
+                setShowToast(true);
+                setTimeout(() => {
+                    setShowToast(false);
+                }, 5000);
             }
         }
         catch (e) {
@@ -57,12 +91,17 @@ const Arena = ({ characterNFT }) => {
 
     return (
         <div className="arena-container">
+            {boss && characterNFT && (
+            <div id="toast" className={showToast ? 'show' : ''}>
+                <div id="desc">{`💥 ${boss.name} was hit for ${characterNFT.attackDamage}!`}</div>
+            </div>
+            )}
             { boss && (
             <div className="boss-container">
                 <div className={`boss-content ${attackState}`}>
                     <h2>🔥 {boss.name} 🔥</h2>
                     <div className="image-content">
-                        <img src={boss.imageURI} alt={`Boss ${boss.name}`}></img>
+                        <img src={`https://cloudflare-ipfs.com/ipfs/${boss.imageURI}`} alt={`Boss ${boss.name}`}></img>
                         <div className="health-bar">
                             <progress value={boss.hp} max={boss.maxHP} />
                             <p>{`${boss.hp} / ${boss.maxHP} HP`}</p>
@@ -74,6 +113,13 @@ const Arena = ({ characterNFT }) => {
                         {`💥 Attack ${boss.name}`}
                     </button>
                 </div>
+                {
+                    attackState === 'attacking' && (
+                        <div className="loading-indicator">
+                            <LoadingIndicator />
+                            <p>Attacking ⚔️</p>
+                        </div>
+                )}
             </div>
             )}
 
@@ -85,7 +131,7 @@ const Arena = ({ characterNFT }) => {
                     <div className="image-content">
                     <h2>{characterNFT.name}</h2>
                     <img
-                        src={characterNFT.imageURI}
+                        src={`https://cloudflare-ipfs.com/ipfs/${characterNFT.imageURI}`}
                         alt={`Character ${characterNFT.name}`}
                     />
                     <div className="health-bar">
