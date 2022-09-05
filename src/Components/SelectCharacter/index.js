@@ -85,13 +85,10 @@ const SelectCharacter = ({ setCharacterNFT }) => {
             try {
                 console.log('Getting character to mint');
                 const characterTxn = await gameContract.getAllDefaultCharacters();
-                console.log('characterTxn', characterTxn);
 
                 const characters = characterTxn.map(character => {
                     return transformCharacterData(character);
                 });
-                
-                console.log('characters', characters);
                 setCharacters(characters);
             }
             catch(e) {

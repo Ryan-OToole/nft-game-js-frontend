@@ -2,12 +2,13 @@ import React, {useEffect, useState} from 'react';
 import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
+import Arena from './Components/Arena';
 import { CONTRACT_ADDRESS, transformCharacterData } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
 import { ethers } from 'ethers';
 
 // Constants
-const TWITTER_HANDLE = '_buildspace';
+const TWITTER_HANDLE = 'web3ForToday';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 
 const App = () => {
@@ -56,7 +57,10 @@ const App = () => {
       );
     }
     else if (currentAccount && !characterNFT) {
-      return <SelectCharacter setCharacterNFT={setCharacterNFT} /> 
+      return (<SelectCharacter setCharacterNFT={setCharacterNFT} />); 
+    }
+    else if (currentAccount && characterNFT) {
+      return (<Arena characterNFT={characterNFT}/>);
     }
   }
 
@@ -110,7 +114,8 @@ const App = () => {
       );
       const txn = await gameContract.checkIfUserHasNFT();
       if (txn.name) {
-        console.log('User has character NFT');
+        console.log('User has character NFT***');
+        console.log('transformCharacterData(txn)', transformCharacterData(txn));
         setCharacterNFT(transformCharacterData(txn));
       }
       else {
@@ -129,7 +134,7 @@ const App = () => {
       <div className="container">
         <div className="header-container">
           <p className="header gradient-text">⚔️ Darkwing Nights ⚔️</p>
-          <p className="sub-text">Team up to protect the Metaverse!</p>
+          <p className="sub-text">Slay your way on and off the chain!</p>
         </div>
         {renderContent()}
         <div className="footer-container">
@@ -139,7 +144,7 @@ const App = () => {
             href={TWITTER_LINK}
             target="_blank"
             rel="noreferrer"
-          >{`built with @${TWITTER_HANDLE}`}</a>
+          >{`built by @${TWITTER_HANDLE}`}</a>
         </div>
       </div>
     </div>
