@@ -5,22 +5,29 @@ import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
 import LoadingIndicator from '../../Components/LoadingIndicator';
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
 
     const [players, setPlayers] = useState(null);
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
     const [showToast, setShowToast] = useState(false);
-    const [provider, setProvider] = useState(false);
 
     useEffect(() => {
+
+        const getPlayers = async (gameContract) => {
+            let allPlayersInGame = await gameContract.getAllPlayersInGame();
+            let allPlayersMap = {};
+            for (let player of allPlayersInGame) {
+                allPlayersMap[player.sender] = transformCharacterData(player);
+            }
+            setPlayers(allPlayersMap);
+        }
 
         const { ethereum } = window;
 
         if (ethereum) {
             const provider = new ethers.providers.Web3Provider(ethereum);
-            setProvider(provider);
             const signer = provider.getSigner();
             const gameContract = new ethers.Contract(
                 CONTRACT_ADDRESS,
@@ -28,10 +35,18 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) =>
                 signer
             );
             setGameContract(gameContract);
+            getPlayers(gameContract);
+            gameContract.on('CharacterNftMinted', getPlayers);
         }
         else {
             console.log('ethereum object not found');
         }
+        return () => {
+            if (gameContract) {
+                gameContract.off('CharacterNftMinted', getPlayers);
+            }
+        }
+
     }, []);
 
     useEffect(() => {
@@ -40,7 +55,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) =>
             setBoss(transformVillianData(bossTxn));
         }
         const onAttackComplete = (from, newBossHP, newPlayerHP, accumulatedDamage) => {
-            console.log('players in arena***', players);
+
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
@@ -53,13 +68,28 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) =>
                     return {...prevState, hp: bossHP};
                 });
                 setCharacterNFT((prevState) => {
-                    return {...prevState, hp: playerHP};
+                    return {...prevState, hp: playerHP, damageDone: damageDone};
                 });
             }
             else {
                 setBoss((prevState) => {
                     return {...prevState, hp: bossHP};
                 });
+                console.log('&&& players &&&2nd try', players);
+                if (players) {
+                    let newPlayersObj = {};
+                    for (let senderAddr in players) {
+                        if (senderAddr === sender) {
+                            players[senderAddr].damageDone = damageDone;
+                            newPlayersObj[senderAddr] = players[senderAddr];
+                        }
+                        else {
+                            newPlayersObj[senderAddr] = players[senderAddr];
+                        }
+                    }
+                    console.log('newPlayersObj', newPlayersObj);
+                    setPlayers(newPlayersObj);
+                }
             }
         }
         if (gameContract) {
@@ -72,22 +102,6 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) =>
             }
         }
     }, [gameContract, currentAccount, setCharacterNFT]);
-
-    useEffect(() => { 
-        const getPlayers = async () => {
-            let allPlayersInGame = await gameContract.getAllPlayersInGame();
-            let allPlayersMap = {};
-            for (let player of allPlayersInGame) {
-                allPlayersMap[player.sender] = transformCharacterData(player);
-            }
-            setPlayers(allPlayersMap);
-            console.log('allPlayersMap Arena:', allPlayersMap);
-        }
-        if (gameContract) {
-            getPlayers();
-        }
-
-    })
 
     const runAttackAction = async () => {
         try {
@@ -107,6 +121,39 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) =>
             console.log('There was an error with the attack:', e);
             setAttackState('');
         }
+    }
+
+    const renderOtherPlayers = () => {
+        let playerArr = [];
+        for (let player in players) {
+            if (player.toLowerCase() !== currentAccount) {
+                playerArr.push(players[player]);
+            }
+        }
+        return playerArr.map( player => (
+            <div className="players-container">
+                <div className="players-container">
+                    <h2>Other Player</h2>
+                    <div className="player">
+                        <div className="image-content">
+                            <h2>{player.name}</h2>
+                            <img
+                                src={`https://cloudflare-ipfs.com/ipfs/${player.imageURI}`}
+                                alt={`Character ${player.name}`}
+                            />
+                            <div className="health-bar">
+                                <progress value={player.hp} max={player.maxHP} />
+                                <p>{`${player.hp} / ${player.maxHP} HP`}</p>
+                            </div>
+                        </div>
+                        <div className="stats">
+                            <h4>{`⚔️ Attack Damage: ${player.attackDamage}`}</h4>
+                            <h4>{`⚔️ Damage Done To Boss: ${player.damageDone}`}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        ))
     }
 
     return (
@@ -166,8 +213,15 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) =>
                 </div>
             </div>
             )}
+            <br />
+            <br />
+            <br />
+            <br />
+            {players && (
+                renderOtherPlayers()
+            )}
         </div>
-    );
+    )
 };
 
 export default Arena;

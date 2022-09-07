@@ -18,7 +18,6 @@ const SelectCharacter = ({ setCharacterNFT, currentAccount }) => {
                 console.log('Minting character in progress');
                 const mintTxn = await gameContract.mintCharacterNFT(characterId);
                 await mintTxn.wait();
-                console.log('mintTxn:', mintTxn);
                 setMintingCharacter(false);
             }
         }

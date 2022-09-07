@@ -27,8 +27,6 @@ const App = () => {
         setIsLoading(false);
         return;
       } else {
-        console.log('We have the ethereum object', ethereum);
-
         const accounts = await ethereum.request({ method: 'eth_accounts'});
         if (accounts.length !== 0) {
           let account = accounts[0];
