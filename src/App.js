@@ -68,8 +68,8 @@ const App = () => {
       return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} />); 
     }
     else if (currentAccount && characterNFT) {
-      console.log('***characterNFT.hp***', characterNFT.hp);
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount}/>);
+
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} />);
     }
   }
 
@@ -123,18 +123,13 @@ const App = () => {
         signer
       );
       const txn = await gameContract.checkIfUserHasNFT();
-
       if (txn.name) {
-        console.log('User has character NFT***');
-        console.log('transformCharacterData(txn)', transformCharacterData(txn));
         setCharacterNFT(transformCharacterData(txn));
-
       }
       setIsLoading(false);
     }
 
     if (currentAccount) {
-      console.log('currentAccount', currentAccount);
       fetchNftMetadata();
     }
 

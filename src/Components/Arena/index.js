@@ -1,23 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS, transformCharacterData } from '../../constants';
+import { CONTRACT_ADDRESS, transformVillianData, transformCharacterData } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
 import LoadingIndicator from '../../Components/LoadingIndicator';
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, playersMap }) => {
 
+    const [players, setPlayers] = useState(null);
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
-
     const [showToast, setShowToast] = useState(false);
+    const [provider, setProvider] = useState(false);
 
     useEffect(() => {
+
         const { ethereum } = window;
 
         if (ethereum) {
             const provider = new ethers.providers.Web3Provider(ethereum);
+            setProvider(provider);
             const signer = provider.getSigner();
             const gameContract = new ethers.Contract(
                 CONTRACT_ADDRESS,
@@ -34,14 +37,16 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
     useEffect(() => {
         const fetchBoss = async () => {
             const bossTxn = await gameContract.getBigBoss();
-            setBoss(transformCharacterData(bossTxn));
+            setBoss(transformVillianData(bossTxn));
         }
-        const onAttackComplete = (from, newBossHP, newPlayerHP) => {
+        const onAttackComplete = (from, newBossHP, newPlayerHP, accumulatedDamage) => {
+            console.log('players in arena***', players);
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
+            const damageDone = accumulatedDamage.toNumber();
 
-            console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP}`);
+            console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
 
             if (currentAccount === sender.toLowerCase()) {
                 setBoss((prevState) => {
@@ -68,6 +73,22 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
         }
     }, [gameContract, currentAccount, setCharacterNFT]);
 
+    useEffect(() => { 
+        const getPlayers = async () => {
+            let allPlayersInGame = await gameContract.getAllPlayersInGame();
+            let allPlayersMap = {};
+            for (let player of allPlayersInGame) {
+                allPlayersMap[player.sender] = transformCharacterData(player);
+            }
+            setPlayers(allPlayersMap);
+            console.log('allPlayersMap Arena:', allPlayersMap);
+        }
+        if (gameContract) {
+            getPlayers();
+        }
+
+    })
+
     const runAttackAction = async () => {
         try {
             if (gameContract) {
@@ -75,7 +96,6 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
                 console.log('attacking boss');
                 const attackTxn = await gameContract.attackBoss();
                 await attackTxn.wait();
-                console.log('attackTxn', attackTxn);
                 setAttackState('hit');
                 setShowToast(true);
                 setTimeout(() => {
