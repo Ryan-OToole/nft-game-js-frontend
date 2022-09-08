@@ -97,7 +97,7 @@
   padding: 10px;
   border-radius: 10px;
   background-color: gray;
-  margin-bottom: 50px;
+  /* margin-bottom: 50px; */
 }
 
 .player .image-content img {

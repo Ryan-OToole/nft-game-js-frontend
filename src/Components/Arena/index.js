@@ -17,11 +17,11 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
 
         const getPlayers = async (gameContract) => {
             let allPlayersInGame = await gameContract.getAllPlayersInGame();
-            let allPlayersMap = {};
+            let playerArr = [];
             for (let player of allPlayersInGame) {
-                allPlayersMap[player.sender] = transformCharacterData(player);
+                playerArr.push(transformCharacterData(player))
             }
-            setPlayers(allPlayersMap);
+            setPlayers(playerArr);
         }
 
         const { ethereum } = window;
@@ -54,14 +54,14 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
             const bossTxn = await gameContract.getBigBoss();
             setBoss(transformVillianData(bossTxn));
         }
-        const onAttackComplete = (from, newBossHP, newPlayerHP, accumulatedDamage) => {
-
+        const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage) => {
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
             const damageDone = accumulatedDamage.toNumber();
-
+            
             console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
+            console.log('check 1');
 
             if (currentAccount === sender.toLowerCase()) {
                 setBoss((prevState) => {
@@ -72,26 +72,30 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
                 });
             }
             else {
+                console.log('inside else');
                 setBoss((prevState) => {
                     return {...prevState, hp: bossHP};
-                });
-                console.log('&&& players &&&2nd try', players);
-                if (players) {
-                    let newPlayersObj = {};
-                    for (let senderAddr in players) {
-                        if (senderAddr === sender) {
-                            players[senderAddr].damageDone = damageDone;
-                            newPlayersObj[senderAddr] = players[senderAddr];
-                        }
-                        else {
-                            newPlayersObj[senderAddr] = players[senderAddr];
+                })
+                console.log('gameContract', gameContract);
+                if (gameContract) {
+                    let allPlayersInGame = await gameContract.getAllPlayersInGame();
+                    let playerArr = [];
+                    for (let player of allPlayersInGame) {
+                        playerArr.push(transformCharacterData(player));
+                    }
+                    for (let player of playerArr) {
+                        if (currentAccount !== sender.toLowerCase()) {
+                            player.damageDone = damageDone;
+                            player.hp = playerHP;
                         }
                     }
-                    console.log('newPlayersObj', newPlayersObj);
-                    setPlayers(newPlayersObj);
+                    console.log('playerArr', playerArr);
+                    setPlayers(playerArr);
+
+                    }
                 }
             }
-        }
+
         if (gameContract) {
             fetchBoss();
             gameContract.on('AttackComplete', onAttackComplete);
@@ -125,30 +129,33 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
 
     const renderOtherPlayers = () => {
         let playerArr = [];
-        for (let player in players) {
-            if (player.toLowerCase() !== currentAccount) {
-                playerArr.push(players[player]);
+        for (let player of players) {
+            if (player.sender.toLowerCase() !== currentAccount) {
+                playerArr.push(player);
             }
         }
+        console.log('inside renderOtherPlayers players is:', players);
         return playerArr.map( player => (
-            <div className="players-container">
+            <div key={player.sender}>
+                <h2>{`Other Player: ${player.sender}`}</h2>
                 <div className="players-container">
-                    <h2>Other Player</h2>
-                    <div className="player">
-                        <div className="image-content">
-                            <h2>{player.name}</h2>
-                            <img
-                                src={`https://cloudflare-ipfs.com/ipfs/${player.imageURI}`}
-                                alt={`Character ${player.name}`}
-                            />
-                            <div className="health-bar">
-                                <progress value={player.hp} max={player.maxHP} />
-                                <p>{`${player.hp} / ${player.maxHP} HP`}</p>
+                    <div className="players-container">
+                        <div className="player">
+                            <div className="image-content">
+                                <h2>{player.name}</h2>
+                                <img
+                                    src={`https://cloudflare-ipfs.com/ipfs/${player.imageURI}`}
+                                    alt={`Character ${player.name}`}
+                                />
+                                <div className="health-bar">
+                                    <progress value={player.hp} max={player.maxHP} />
+                                    <p>{`${player.hp} / ${player.maxHP} HP`}</p>
+                                </div>
                             </div>
-                        </div>
                         <div className="stats">
                             <h4>{`⚔️ Attack Damage: ${player.attackDamage}`}</h4>
                             <h4>{`⚔️ Damage Done To Boss: ${player.damageDone}`}</h4>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -208,6 +215,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
                     </div>
                     <div className="stats">
                     <h4>{`⚔️ Attack Damage: ${characterNFT.attackDamage}`}</h4>
+                    <h4>{`⚔️ Damage Done To Boss: ${characterNFT.damageDone}`}</h4>
                     </div>
                 </div>
                 </div>
