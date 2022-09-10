@@ -5,9 +5,8 @@ import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
 import LoadingIndicator from '../../Components/LoadingIndicator';
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers }) => {
 
-    const [players, setPlayers] = useState(null);
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
@@ -61,7 +60,6 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
             const damageDone = accumulatedDamage.toNumber();
             
             console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
-            console.log('check 1');
 
             if (currentAccount === sender.toLowerCase()) {
                 setBoss((prevState) => {
@@ -71,27 +69,31 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
                     return {...prevState, hp: playerHP, damageDone: damageDone};
                 });
             }
-            else {
-                console.log('inside else');
+            if (currentAccount !== sender.toLowerCase()) {
                 setBoss((prevState) => {
                     return {...prevState, hp: bossHP};
                 })
-                console.log('gameContract', gameContract);
                 if (gameContract) {
                     let allPlayersInGame = await gameContract.getAllPlayersInGame();
                     let playerArr = [];
                     for (let player of allPlayersInGame) {
                         playerArr.push(transformCharacterData(player));
                     }
+                    let newPlayerArr = [];
+                    console.log('&&&playerArr&&&', playerArr);
                     for (let player of playerArr) {
-                        if (currentAccount !== sender.toLowerCase()) {
-                            player.damageDone = damageDone;
-                            player.hp = playerHP;
-                        }
-                    }
-                    console.log('playerArr', playerArr);
-                    setPlayers(playerArr);
 
+                      if (!(currentAccount === sender.toLowerCase())) {
+                        console.log('currentAccount', currentAccount);
+                        console.log('sender.toLowerCase()', sender.toLowerCase());
+                        player.damageDone = damageDone;
+                        player.hp = playerHP;
+                        console.log('player', player);
+                        newPlayerArr.push(player);
+                      }
+                    }
+                    console.log('newPlayerArr', newPlayerArr);
+                    setPlayers(newPlayerArr);
                     }
                 }
             }
@@ -130,11 +132,10 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount }) => {
     const renderOtherPlayers = () => {
         let playerArr = [];
         for (let player of players) {
-            if (player.sender.toLowerCase() !== currentAccount) {
+            if (!(player.sender.toLowerCase() == currentAccount)) {
                 playerArr.push(player);
             }
         }
-        console.log('inside renderOtherPlayers players is:', players);
         return playerArr.map( player => (
             <div key={player.sender}>
                 <h2>{`Other Player: ${player.sender}`}</h2>

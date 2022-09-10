@@ -14,6 +14,8 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 
 const App = () => {
 
+
+  const [players, setPlayers] = useState(null);
   const [currentAccount, setCurrentAccount] = useState(null);
   const [characterNFT, setCharacterNFT] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,11 +65,11 @@ const App = () => {
     }
     else if ((currentAccount && !characterNFT) || (currentAccount && characterNFT.hp === 0)) {
       
-      return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} />); 
+      return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers}  />); 
     }
     else if (currentAccount && characterNFT) {
 
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} />);
     }
   }
 

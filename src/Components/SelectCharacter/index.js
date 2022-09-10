@@ -5,7 +5,7 @@ import myEpicGame from '../../utils/MyEpicGame.json';
 import './SelectCharacter.css';
 import LoadingIndicator from "../../Components/LoadingIndicator";
 
-const SelectCharacter = ({ setCharacterNFT, currentAccount }) => {
+const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers }) => {
 
     const [characters, setCharacters] = useState([]);
     const [gameContract, setGameContract] = useState(null);
@@ -85,6 +85,12 @@ const SelectCharacter = ({ setCharacterNFT, currentAccount }) => {
           if (gameContract) {
             const characterNFT = await gameContract.checkIfUserHasNFT();
             setCharacterNFT(transformCharacterData(characterNFT));
+            const otherPlayers = await gameContract.getAllPlayersInGame();
+            let newotherPlayersArr = [];
+            for (let player of otherPlayers) {
+              newotherPlayersArr.push(transformCharacterData(player));
+            }
+            setPlayers(newotherPlayersArr);
           }
         };
       
