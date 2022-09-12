@@ -18,7 +18,9 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             let allPlayersInGame = await gameContract.getAllPlayersInGame();
             let playerArr = [];
             for (let player of allPlayersInGame) {
-                playerArr.push(transformCharacterData(player))
+                if (player.hp > 0) {
+                    playerArr.push(transformCharacterData(player))
+                }
             }
             setPlayers(playerArr);
         }
@@ -80,16 +82,14 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                         playerArr.push(transformCharacterData(player));
                     }
                     let newPlayerArr = [];
-                    console.log('&&&playerArr&&&', playerArr);
                     for (let player of playerArr) {
-
-                      if (!(currentAccount === sender.toLowerCase())) {
-                        console.log('currentAccount', currentAccount);
-                        console.log('sender.toLowerCase()', sender.toLowerCase());
-                        player.damageDone = damageDone;
-                        player.hp = playerHP;
-                        console.log('player', player);
-                        newPlayerArr.push(player);
+                      if ( !(currentAccount === sender.toLowerCase()) ) {
+                        console.log('check 3');
+                        if (playerHP > 0) {
+                            player.damageDone = damageDone;
+                            player.hp = playerHP;
+                            newPlayerArr.push(player);
+                        }
                       }
                     }
                     console.log('newPlayerArr', newPlayerArr);
@@ -132,7 +132,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const renderOtherPlayers = () => {
         let playerArr = [];
         for (let player of players) {
-            if (!(player.sender.toLowerCase() == currentAccount)) {
+            if (!(player.sender.toLowerCase() === currentAccount)) {
                 playerArr.push(player);
             }
         }
