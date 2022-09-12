@@ -19,6 +19,7 @@ const App = () => {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [characterNFT, setCharacterNFT] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [nftDeathOwner, setNftDeathOwner] = useState(false);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -64,11 +65,22 @@ const App = () => {
       );
     }
     else if ((currentAccount && !characterNFT) || (currentAccount && characterNFT.hp === 0)) {
-      
-      return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers}  />); 
+      if (nftDeathOwner) {
+        return (
+          <div>
+            <p className="header gradient-text">Your NFT has died. You must mint another to finish the battle</p>
+              <img
+                src={'https://i.imgur.com/NVA0aZH.png'}
+                alt=""
+              />
+          </div>
+        );
+      }
+      else {
+        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers}  />); 
+      }
     }
     else if (currentAccount && characterNFT) {
-
       return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} />);
     }
   }
@@ -113,6 +125,15 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    const handleNFTDeath = async (from, allPlayersInGame) => {
+      if (from.toLowerCase() === currentAccount) {
+        setNftDeathOwner(true);
+        setTimeout(() => {
+          setNftDeathOwner(false);
+      }, 5000);
+      }
+    }
+
     const fetchNftMetadata = async () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -122,6 +143,7 @@ const App = () => {
         myEpicGame.abi,
         signer
       );
+      gameContract.on('NftDeath', handleNFTDeath)
       const txn = await gameContract.checkIfUserHasNFT();
       if (txn.name) {
         setCharacterNFT(transformCharacterData(txn));
@@ -142,7 +164,7 @@ const App = () => {
           <p className="header gradient-text">⚔️ Darkwing Nights ⚔️</p>
           <p className="sub-text">Slay your way on and off the chain!</p>
         </div>
-        {renderContent()}
+        { renderContent() }
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
           <a

@@ -11,18 +11,38 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
     const [showToast, setShowToast] = useState(false);
+    const [nftDeathOther, setNftDeathOther] = useState(false);
+    const [nftDeathOwner, setNftDeathOwner] = useState(false);
 
     useEffect(() => {
 
-        const getPlayers = async (gameContract) => {
-            let allPlayersInGame = await gameContract.getAllPlayersInGame();
-            let playerArr = [];
-            for (let player of allPlayersInGame) {
-                if (player.hp > 0) {
-                    playerArr.push(transformCharacterData(player))
+        const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
+            if (allPlayersInGame) {
+                let playerArr = [];
+                for (let player of allPlayersInGame) {
+                    if (player.hp > 0) {
+                        playerArr.push(transformCharacterData(player))
+                    }
                 }
+                setPlayers(playerArr);
             }
-            setPlayers(playerArr);
+        }
+
+        const nftDeath = async (from, allPlayersInGame) => {
+            if (currentAccount === from.toLowerCase()) {
+                setNftDeathOwner(true);
+                setTimeout(() => {
+                    setNftDeathOwner(false);
+                    setPlayers(allPlayersInGame);
+                }, 5000);
+            }
+            else {
+                setNftDeathOther(true);
+                setTimeout(() => {
+                    setNftDeathOther(false);
+                    setPlayers(allPlayersInGame);
+                }, 5000);
+            }
         }
 
         const { ethereum } = window;
@@ -38,6 +58,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             setGameContract(gameContract);
             getPlayers(gameContract);
             gameContract.on('CharacterNftMinted', getPlayers);
+            gameContract.on('NftDeath', nftDeath);
         }
         else {
             console.log('ethereum object not found');
@@ -45,6 +66,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         return () => {
             if (gameContract) {
                 gameContract.off('CharacterNftMinted', getPlayers);
+                gameContract.off('NftDeath', nftDeath);
             }
         }
 
@@ -55,7 +77,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             const bossTxn = await gameContract.getBigBoss();
             setBoss(transformVillianData(bossTxn));
         }
-        const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage) => {
+        const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
@@ -75,16 +97,13 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 setBoss((prevState) => {
                     return {...prevState, hp: bossHP};
                 })
-                if (gameContract) {
-                    let allPlayersInGame = await gameContract.getAllPlayersInGame();
-                    let playerArr = [];
-                    for (let player of allPlayersInGame) {
-                        playerArr.push(transformCharacterData(player));
-                    }
+                let playerArr = [];
+                for (let player of allPlayersInGame) {
+                    playerArr.push(transformCharacterData(player));
+                }
                     let newPlayerArr = [];
                     for (let player of playerArr) {
                       if ( !(currentAccount === sender.toLowerCase()) ) {
-                        console.log('check 3');
                         if (playerHP > 0) {
                             player.damageDone = damageDone;
                             player.hp = playerHP;
@@ -92,9 +111,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                         }
                       }
                     }
-                    console.log('newPlayerArr', newPlayerArr);
                     setPlayers(newPlayerArr);
-                    }
                 }
             }
 
@@ -133,7 +150,9 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         let playerArr = [];
         for (let player of players) {
             if (!(player.sender.toLowerCase() === currentAccount)) {
-                playerArr.push(player);
+                if (!(player.sender.toLowerCase() === '0x0000000000000000000000000000000000000000')) {
+                    playerArr.push(player);
+                }
             }
         }
         return playerArr.map( player => (
@@ -197,7 +216,15 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 )}
             </div>
             )}
-
+            {nftDeathOwner && (
+                <div>
+                    {`Your NFT has died :(  Mint another to finish the battle`}
+                    <img
+                        src={'https://i.imgur.com/NVA0aZH.png'}
+                        alt=""
+                    />
+                </div>
+            )}          
             {characterNFT && (
             <div className="players-container">
                 <div className="player-container">
@@ -226,6 +253,14 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             <br />
             <br />
             <br />
+            {nftDeathOther && (
+                <div>
+                    <p className="header gradient-text">{`Another player's NFT has died =)  Don't worry. You got this!`}</p>
+                    <img
+                        src={'https://i.imgur.com/NVA0aZH.png'}
+                    />
+                </div>
+            )}
             {players && (
                 renderOtherPlayers()
             )}
