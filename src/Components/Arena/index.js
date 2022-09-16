@@ -41,8 +41,9 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         if (ethereum) {
             const provider = new ethers.providers.Web3Provider(ethereum);
             const signer = provider.getSigner();
+            console.log('contractAddress, inside Arena', contractAddress)
             const gameContract = new ethers.Contract(
-                "0x7Fde3Cd9183e84BFEc6c05E6dA2b02d13F93121f",
+                contractAddress,
                 myEpicGame.abi,
                 signer
             );
@@ -61,7 +62,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             }
         }
 
-    }, []);
+    }, [contractAddress]);
 
     useEffect(() => {
         const fetchBoss = async () => {

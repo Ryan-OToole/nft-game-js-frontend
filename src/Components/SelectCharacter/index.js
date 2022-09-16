@@ -49,8 +49,9 @@ const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers, contract
         if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
+        console.log('contractAddress, inside SelectCharacter', contractAddress)
         const gameContract = new ethers.Contract(
-            "0x7Fde3Cd9183e84BFEc6c05E6dA2b02d13F93121f",
+            contractAddress,
             myEpicGame.abi,
             signer
         );
@@ -59,7 +60,7 @@ const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers, contract
         } else {
         console.log('Ethereum object not found');
         }
-    }, []);
+    }, [contractAddress]);
 
     useEffect(() => {
         const getCharacters = async () => {

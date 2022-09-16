@@ -22,7 +22,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
   const [bossHome, setBossHome] = useState(null);
-  const [contractAddress, setContractAddress] = useState("0x0C80C600f8D22BdD63417d4699EBb6d85e98dBE5");
+  const [contractAddress, setContractAddress] = useState("0xB3fA98c28Fd347bB1C7B5d308E4B0b72c6dC7C5B");
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -54,7 +54,7 @@ const App = () => {
     console.log('isnide setNewGameAddress');
     let gameArray = await gameContractFactory.getDeployedGames();
     let newGame = gameArray[gameArray.length - 1];
-    console.log('newGame', newGame);
+    console.log('newGame/setContractAddress/in APP', newGame);
     setContractAddress(newGame);
     console.log('gameArray', gameArray);
   } 
@@ -72,7 +72,6 @@ const App = () => {
       setTimeout(() => {
         setNewGameAddress(gameContractFactory)
     }, 10000);
-      console.log('contractAddress', contractAddress);
   }
 
   const renderContent = () => {
@@ -179,6 +178,7 @@ const App = () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
+      console.log('contractAddress', contractAddress);
       const gameContract = new ethers.Contract(
         contractAddress,
         myEpicGame.abi,
