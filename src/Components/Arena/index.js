@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESS, transformVillianData, transformCharacterData } from '../../constants';
+import { transformVillianData, transformCharacterData } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
 import LoadingIndicator from '../../Components/LoadingIndicator';
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, contractAddress }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [nftDeathOther, setNftDeathOther] = useState(false);
-    const [nftDeathOwner, setNftDeathOwner] = useState(false);
+    const [nftDeathBoss, setNftDeathBoss] = useState(false);
 
     useEffect(() => {
-
         const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
             if (allPlayersInGame) {
                 let playerArr = [];
@@ -27,16 +26,8 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 setPlayers(playerArr);
             }
         }
-
         const nftDeath = async (from, allPlayersInGame) => {
-            if (currentAccount === from.toLowerCase()) {
-                setNftDeathOwner(true);
-                setTimeout(() => {
-                    setNftDeathOwner(false);
-                    setPlayers(allPlayersInGame);
-                }, 5000);
-            }
-            else {
+            if (!(currentAccount === from.toLowerCase())) {
                 setNftDeathOther(true);
                 setTimeout(() => {
                     setNftDeathOther(false);
@@ -51,7 +42,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             const provider = new ethers.providers.Web3Provider(ethereum);
             const signer = provider.getSigner();
             const gameContract = new ethers.Contract(
-                CONTRACT_ADDRESS,
+                contractAddress,
                 myEpicGame.abi,
                 signer
             );
@@ -76,6 +67,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         const fetchBoss = async () => {
             const bossTxn = await gameContract.getBigBoss();
             setBoss(transformVillianData(bossTxn));
+            setBossHome(transformVillianData(bossTxn));
         }
         const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
             const bossHP = newBossHP.toNumber();
@@ -89,12 +81,18 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 setBoss((prevState) => {
                     return {...prevState, hp: bossHP};
                 });
+                setBossHome((prevState) => {
+                    return {...prevState, hp: bossHP};
+                });
                 setCharacterNFT((prevState) => {
                     return {...prevState, hp: playerHP, damageDone: damageDone};
                 });
             }
             if (currentAccount !== sender.toLowerCase()) {
                 setBoss((prevState) => {
+                    return {...prevState, hp: bossHP};
+                })
+                setBossHome((prevState) => {
                     return {...prevState, hp: bossHP};
                 })
                 let playerArr = [];
@@ -112,6 +110,14 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                       }
                     }
                     setPlayers(newPlayerArr);
+                }
+                if (newBossHP == 0) {
+                    setNftDeathBoss(true);
+                    setBoss(null);
+                    setBossHome(null);
+                    setTimeout(() => {
+                        setNftDeathBoss(false);
+                    }, 5000);
                 }
             }
 
@@ -190,7 +196,20 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 <div id="desc">{`💥 ${boss.name} was hit for ${characterNFT.attackDamage}!`}</div>
             </div>
             )}
-            { boss && (
+        { nftDeathBoss && (
+
+            <div>
+                <p className="header gradient-text">{`You killed the boss NFT :)  Celebrate Good Times ;)`}</p>
+                <img
+                    src={'https://i.imgur.com/SOGZ689.png'}
+                    alt=""
+                />
+                </div>
+
+                
+         
+        )} 
+        { boss && (
             <div className="boss-container">
                 <div className={`boss-content ${attackState}`}>
                     <h2>🔥 {boss.name} 🔥</h2>
@@ -215,16 +234,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                         </div>
                 )}
             </div>
-            )}
-            {nftDeathOwner && (
-                <div>
-                    {`Your NFT has died :(  Mint another to finish the battle`}
-                    <img
-                        src={'https://i.imgur.com/NVA0aZH.png'}
-                        alt=""
-                    />
-                </div>
-            )}          
+        )}
             {characterNFT && (
             <div className="players-container">
                 <div className="player-container">

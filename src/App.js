@@ -3,8 +3,10 @@ import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
 import Arena from './Components/Arena';
-import { CONTRACT_ADDRESS, transformCharacterData } from './constants';
+import { CONTRACT_FACTORY_ADDRESS, transformCharacterData, RNG_CONTRACT_ADDRESS } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
+import myEpicGameFactory from './utils/MyEpicGameFactory.json';
+import RNG from './utils/RNG.json';
 import { ethers } from 'ethers';
 import LoadingIndicator from './Components/LoadingIndicator';
 
@@ -14,12 +16,14 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 
 const App = () => {
 
-
   const [players, setPlayers] = useState(null);
   const [currentAccount, setCurrentAccount] = useState(null);
   const [characterNFT, setCharacterNFT] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
+  const [bossHome, setBossHome] = useState(null);
+  const [contractAddress, setContractAddress] = useState(null);
+  const [deployedGames, setDeployedGames] = useState(null);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -45,6 +49,50 @@ const App = () => {
       console.log(e);
     }
     setIsLoading(false);
+  }
+
+  // const returnRandomness = async (RNGContract) => {
+  //   let randomNumber = RNGContract.s_randomWords(0);
+  //   console.log('randomNumber', randomNumber);
+  //   console.log('randomness sequence end');
+  // }
+
+  // const requestRandomNumber = async () => {
+  //   console.log('randomness sequence beginning');
+  //   const provider = new ethers.providers.Web3Provider(window.ethereum);
+  //   const signer = provider.getSigner();
+  //   const RNGContract = new ethers.Contract(
+  //     RNG_CONTRACT_ADDRESS,
+  //     RNG,
+  //     signer
+  //   );
+  //   console.log('RNGContract', RNGContract);
+  //   const txn = await RNGContract.requestRandomWords();
+  //   setTimeout(() => {
+  //     returnRandomness(RNGContract);
+  // }, 300000);
+  // }
+
+  const handleNewGame = async () => {
+      console.log('Checking for Character NFT fucking shit monkey address:');
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const gameContractFactory = new ethers.Contract(
+        CONTRACT_FACTORY_ADDRESS,
+        myEpicGameFactory.abi,
+        signer
+      );
+      await gameContractFactory.deployGame();
+      setTimeout(() => {
+        returnNewGameAddress(gameContractFactory);
+    }, 10000);
+
+  }
+
+  const returnNewGameAddress = async (gameContractFactory) => {
+    let deployedGames = await gameContractFactory.getDeployedGames();
+    setDeployedGames(deployedGames);
+    console.log('deployedGames', deployedGames);
   }
 
   const renderContent = () => {
@@ -77,11 +125,24 @@ const App = () => {
         );
       }
       else {
-        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers}  />); 
+        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} contractAddress={contractAddress}   />); 
       }
     }
+    // else if (currentAccount && characterNFT && !bossHome) {
+    //   return (
+    //     <div className="connect-wallet-container">
+    //       <img
+    //         src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
+    //         alt="Monty Python Gif"
+    //       />
+    //       <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+    //         Play a new game? The blockchain needs you...
+    //       </button>
+    //     </div>
+    //   )
+    // }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} contractAddress={contractAddress} />);
     }
   }
 
@@ -138,8 +199,17 @@ const App = () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
+      if (deployedGames) {
+        console.log('deployedGames[deployedGames.length - 1]', deployedGames[deployedGames.length - 1]);
+        console.log('deployedGames', deployedGames);
+        setContractAddress(deployedGames[deployedGames.length - 1]);
+      }
+      else {
+        setContractAddress('0xE56ab62DDA929F84D40462a47d57EC96D7aCDC04');
+      }
+      console.log('contractAddress', contractAddress);
       const gameContract = new ethers.Contract(
-        CONTRACT_ADDRESS,
+        contractAddress,
         myEpicGame.abi,
         signer
       );
@@ -155,15 +225,28 @@ const App = () => {
       fetchNftMetadata();
     }
 
-  }, [currentAccount]);
+  }, [currentAccount, deployedGames]);
 
   return (
     <div className="App">
+          <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+            New Game
+          </button>
+     
       <div className="container">
         <div className="header-container">
           <p className="header gradient-text">⚔️ Darkwing Nights ⚔️</p>
           <p className="sub-text">Slay your way on and off the chain!</p>
         </div>
+        {/* <div className="connect-wallet-container">
+          <img
+            src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
+            alt="Monty Python Gif"
+          />
+          <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+            Play a new game? The blockchain needs you...
+          </button>
+        </div> */}
         { renderContent() }
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
