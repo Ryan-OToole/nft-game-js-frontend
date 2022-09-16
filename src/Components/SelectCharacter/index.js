@@ -50,7 +50,7 @@ const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers, contract
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const gameContract = new ethers.Contract(
-            contractAddress,
+            "0x7Fde3Cd9183e84BFEc6c05E6dA2b02d13F93121f",
             myEpicGame.abi,
             signer
         );
