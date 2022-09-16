@@ -1,6 +1,5 @@
-const CONTRACT_FACTORY_ADDRESS = '0x39236F886b29476BC88B8c1FdF4b09F451dF27f2';
+const CONTRACT_FACTORY_ADDRESS = '0xF6aA3eec7618F542827B8F074Ca0f3Bd931a8E51';
 const RNG_CONTRACT_ADDRESS='0xE134fdcFC017c858eb8d8203Ed648c6fcDa8178b';
-
 const transformCharacterData = (characterData) => {
     return {
         sender: characterData.sender,

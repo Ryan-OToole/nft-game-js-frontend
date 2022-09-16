@@ -22,8 +22,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
   const [bossHome, setBossHome] = useState(null);
-  const [contractAddress, setContractAddress] = useState(null);
-  const [deployedGames, setDeployedGames] = useState(null);
+  const [contractAddress, setContractAddress] = useState("0xE56ab62DDA929F84D40462a47d57EC96D7aCDC04");
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -73,6 +72,12 @@ const App = () => {
   // }, 300000);
   // }
 
+  const setNewGameAddress = async (gameContractFactory) => {
+    let gameArray = await gameContractFactory.getDeployedGames();
+    setContractAddress(gameArray[gameArray.length - 1]);
+    console.log('gameArray', gameArray);
+  } 
+
   const handleNewGame = async () => {
       console.log('Checking for Character NFT fucking shit monkey address:');
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -82,17 +87,10 @@ const App = () => {
         myEpicGameFactory.abi,
         signer
       );
-      await gameContractFactory.deployGame();
+      const game = await gameContractFactory.deployGame();
       setTimeout(() => {
-        returnNewGameAddress(gameContractFactory);
+        setNewGameAddress(gameContractFactory);
     }, 10000);
-
-  }
-
-  const returnNewGameAddress = async (gameContractFactory) => {
-    let deployedGames = await gameContractFactory.getDeployedGames();
-    setDeployedGames(deployedGames);
-    console.log('deployedGames', deployedGames);
   }
 
   const renderContent = () => {
@@ -125,7 +123,7 @@ const App = () => {
         );
       }
       else {
-        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} contractAddress={contractAddress}   />); 
+        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} contractAddress={contractAddress} />); 
       }
     }
     // else if (currentAccount && characterNFT && !bossHome) {
@@ -199,15 +197,6 @@ const App = () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      if (deployedGames) {
-        console.log('deployedGames[deployedGames.length - 1]', deployedGames[deployedGames.length - 1]);
-        console.log('deployedGames', deployedGames);
-        setContractAddress(deployedGames[deployedGames.length - 1]);
-      }
-      else {
-        setContractAddress('0xE56ab62DDA929F84D40462a47d57EC96D7aCDC04');
-      }
-      console.log('contractAddress', contractAddress);
       const gameContract = new ethers.Contract(
         contractAddress,
         myEpicGame.abi,
@@ -225,7 +214,7 @@ const App = () => {
       fetchNftMetadata();
     }
 
-  }, [currentAccount, deployedGames]);
+  }, [currentAccount, contractAddress]);
 
   return (
     <div className="App">
