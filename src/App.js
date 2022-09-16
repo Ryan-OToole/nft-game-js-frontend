@@ -22,7 +22,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
   const [bossHome, setBossHome] = useState(null);
-  const [contractAddress, setContractAddress] = useState("0x7DaB7cB487a203FD1435249FE6870979aF753138");
+  const [contractAddress, setContractAddress] = useState("0x0C80C600f8D22BdD63417d4699EBb6d85e98dBE5");
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -50,6 +50,15 @@ const App = () => {
     setIsLoading(false);
   }
 
+  const setNewGameAddress = async (gameContractFactory) => {
+    console.log('isnide setNewGameAddress');
+    let gameArray = await gameContractFactory.getDeployedGames();
+    let newGame = gameArray[gameArray.length - 1];
+    console.log('newGame', newGame);
+    setContractAddress(newGame);
+    console.log('gameArray', gameArray);
+  } 
+
   const handleNewGame = async () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
@@ -58,10 +67,11 @@ const App = () => {
         myEpicGameFactory.abi,
         signer
       );
-      const game = await gameContractFactory.deployAndReturnGame();
-      await game.wait();
-      console.log('game.to', game.to);
-      setContractAddress(game.to);
+      const game = await gameContractFactory.deployGame();
+      console.log('game', game);
+      setTimeout(() => {
+        setNewGameAddress(gameContractFactory)
+    }, 10000);
       console.log('contractAddress', contractAddress);
   }
 
