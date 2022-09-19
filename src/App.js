@@ -3,10 +3,10 @@ import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
 import Arena from './Components/Arena';
-import { CONTRACT_FACTORY_ADDRESS, transformCharacterData, RNG_CONTRACT_ADDRESS } from './constants';
+import { CONTRACT_FACTORY_ADDRESS, transformCharacterData } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
 import myEpicGameFactory from './utils/MyEpicGameFactory.json';
-import RNG from './utils/RNG.json';
+
 import { ethers } from 'ethers';
 import LoadingIndicator from './Components/LoadingIndicator';
 
@@ -189,6 +189,9 @@ const App = () => {
       if (txn.name) {
         setCharacterNFT(transformCharacterData(txn));
       }
+      const allPlayersInGame = await gameContract.getAllPlayersInGame();
+      console.log('allPlayersInGame????', allPlayersInGame);
+      
       setIsLoading(false);
     }
 

@@ -112,7 +112,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                     }
                     setPlayers(newPlayerArr);
                 }
-                if (newBossHP == 0) {
+                if (newBossHP === 0) {
                     setNftDeathBoss(true);
                     setBoss(null);
                     setBossHome(null);
