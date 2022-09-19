@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { transformCharacterData } from '../../constants';
+import { transformCharacterData, CONTRACT_GAME_ADDRESS } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './SelectCharacter.css';
 import LoadingIndicator from "../../Components/LoadingIndicator";
 
-const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers, contractAddress }) => {
+const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers }) => {
 
     const [characters, setCharacters] = useState([]);
     const [gameContract, setGameContract] = useState(null);
@@ -50,7 +50,7 @@ const SelectCharacter = ({ setCharacterNFT, currentAccount, setPlayers, contract
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const gameContract = new ethers.Contract(
-            contractAddress,
+            CONTRACT_GAME_ADDRESS,
             myEpicGame.abi,
             signer
         );

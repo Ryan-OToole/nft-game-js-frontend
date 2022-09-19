@@ -3,9 +3,8 @@ import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
 import Arena from './Components/Arena';
-import { CONTRACT_FACTORY_ADDRESS, transformCharacterData, RNG_CONTRACT_ADDRESS } from './constants';
+import { transformCharacterData, RNG_CONTRACT_ADDRESS, CONTRACT_GAME_ADDRESS } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
-import myEpicGameFactory from './utils/MyEpicGameFactory.json';
 import RNG from './utils/RNG.json';
 import { ethers } from 'ethers';
 import LoadingIndicator from './Components/LoadingIndicator';
@@ -21,8 +20,6 @@ const App = () => {
   const [characterNFT, setCharacterNFT] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
-  const [bossHome, setBossHome] = useState(null);
-  const [contractAddress, setContractAddress] = useState("0xE56ab62DDA929F84D40462a47d57EC96D7aCDC04");
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -50,48 +47,48 @@ const App = () => {
     setIsLoading(false);
   }
 
-  // const returnRandomness = async (RNGContract) => {
-  //   let randomNumber = RNGContract.s_randomWords(0);
-  //   console.log('randomNumber', randomNumber);
-  //   console.log('randomness sequence end');
-  // }
-
-  // const requestRandomNumber = async () => {
-  //   console.log('randomness sequence beginning');
-  //   const provider = new ethers.providers.Web3Provider(window.ethereum);
-  //   const signer = provider.getSigner();
-  //   const RNGContract = new ethers.Contract(
-  //     RNG_CONTRACT_ADDRESS,
-  //     RNG,
-  //     signer
-  //   );
-  //   console.log('RNGContract', RNGContract);
-  //   const txn = await RNGContract.requestRandomWords();
-  //   setTimeout(() => {
-  //     returnRandomness(RNGContract);
-  // }, 300000);
-  // }
-
-  const setNewGameAddress = async (gameContractFactory) => {
-    let gameArray = await gameContractFactory.getDeployedGames();
-    setContractAddress(gameArray[gameArray.length - 1]);
-    console.log('gameArray', gameArray);
-  } 
-
-  const handleNewGame = async () => {
-      console.log('Checking for Character NFT fucking shit monkey address:');
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const gameContractFactory = new ethers.Contract(
-        CONTRACT_FACTORY_ADDRESS,
-        myEpicGameFactory.abi,
-        signer
-      );
-      const game = await gameContractFactory.deployGame();
-      setTimeout(() => {
-        setNewGameAddress(gameContractFactory);
-    }, 10000);
+  const returnRandomness = async (RNGContract) => {
+    let randomNumber = RNGContract.s_randomWords(0);
+    console.log('randomNumber', randomNumber);
+    console.log('randomness sequence end');
   }
+
+  const requestRandomNumber = async () => {
+    console.log('randomness sequence beginning');
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const RNGContract = new ethers.Contract(
+      RNG_CONTRACT_ADDRESS,
+      RNG,
+      signer
+    );
+    console.log('RNGContract', RNGContract);
+    const txn = await RNGContract.requestRandomWords();
+    setTimeout(() => {
+      returnRandomness(RNGContract);
+  }, 300000);
+  }
+
+  // const setNewGameAddress = async (gameContractFactory) => {
+  //   let gameArray = await gameContractFactory.getDeployedGames();
+  //   setContractAddress(gameArray[gameArray.length - 1]);
+  //   console.log('gameArray', gameArray);
+  // } 
+
+  // const handleNewGame = async () => {
+  //     console.log('Checking for Character NFT fucking shit monkey address:');
+  //     const provider = new ethers.providers.Web3Provider(window.ethereum);
+  //     const signer = provider.getSigner();
+  //     const gameContractFactory = new ethers.Contract(
+  //       CONTRACT_FACTORY_ADDRESS,
+  //       myEpicGameFactory.abi,
+  //       signer
+  //     );
+  //     const game = await gameContractFactory.deployGame();
+  //     setTimeout(() => {
+  //       setNewGameAddress(gameContractFactory);
+  //   }, 10000);
+  // }
 
   const renderContent = () => {
     if (isLoading) {
@@ -123,7 +120,7 @@ const App = () => {
         );
       }
       else {
-        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} contractAddress={contractAddress} />); 
+        return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} />); 
       }
     }
     // else if (currentAccount && characterNFT && !bossHome) {
@@ -140,7 +137,7 @@ const App = () => {
     //   )
     // }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} contractAddress={contractAddress} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} />);
     }
   }
 
@@ -198,7 +195,7 @@ const App = () => {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const gameContract = new ethers.Contract(
-        contractAddress,
+        CONTRACT_GAME_ADDRESS,
         myEpicGame.abi,
         signer
       );
@@ -214,13 +211,13 @@ const App = () => {
       fetchNftMetadata();
     }
 
-  }, [currentAccount, contractAddress]);
+  }, [currentAccount, CONTRACT_GAME_ADDRESS]);
 
   return (
     <div className="App">
-          <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+          {/* <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
             New Game
-          </button>
+          </button> */}
      
       <div className="container">
         <div className="header-container">
@@ -232,7 +229,7 @@ const App = () => {
             src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
             alt="Monty Python Gif"
           />
-          <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+          <button className="cta-button connect-wallet-button" onClick={connectWallet}>
             Play a new game? The blockchain needs you...
           </button>
         </div> */}

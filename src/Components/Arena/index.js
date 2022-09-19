@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { transformVillianData, transformCharacterData } from '../../constants';
+import { transformVillianData, transformCharacterData, CONTRACT_GAME_ADDRESS } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
 import LoadingIndicator from '../../Components/LoadingIndicator';
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, contractAddress }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
@@ -42,7 +42,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             const provider = new ethers.providers.Web3Provider(ethereum);
             const signer = provider.getSigner();
             const gameContract = new ethers.Contract(
-                contractAddress,
+                CONTRACT_GAME_ADDRESS,
                 myEpicGame.abi,
                 signer
             );
@@ -67,7 +67,6 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         const fetchBoss = async () => {
             const bossTxn = await gameContract.getBigBoss();
             setBoss(transformVillianData(bossTxn));
-            setBossHome(transformVillianData(bossTxn));
         }
         const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
             const bossHP = newBossHP.toNumber();
@@ -81,18 +80,12 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 setBoss((prevState) => {
                     return {...prevState, hp: bossHP};
                 });
-                setBossHome((prevState) => {
-                    return {...prevState, hp: bossHP};
-                });
                 setCharacterNFT((prevState) => {
                     return {...prevState, hp: playerHP, damageDone: damageDone};
                 });
             }
             if (currentAccount !== sender.toLowerCase()) {
                 setBoss((prevState) => {
-                    return {...prevState, hp: bossHP};
-                })
-                setBossHome((prevState) => {
                     return {...prevState, hp: bossHP};
                 })
                 let playerArr = [];
@@ -114,7 +107,6 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                 if (newBossHP == 0) {
                     setNftDeathBoss(true);
                     setBoss(null);
-                    setBossHome(null);
                     setTimeout(() => {
                         setNftDeathBoss(false);
                     }, 5000);
