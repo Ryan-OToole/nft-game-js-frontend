@@ -47,10 +47,9 @@ const App = () => {
     setIsLoading(false);
   }
 
-  const returnRandomness = async (RNGContract) => {
-    let randomNumber = RNGContract.s_randomWords(0);
-    console.log('randomNumber', randomNumber);
-    console.log('randomness sequence end');
+  const displayRandomNumber = async (RNGContract) => {
+    const txn = await RNGContract.returnRandomNumber();
+    console.log('txn', txn);
   }
 
   const requestRandomNumber = async () => {
@@ -59,14 +58,14 @@ const App = () => {
     const signer = provider.getSigner();
     const RNGContract = new ethers.Contract(
       RNG_CONTRACT_ADDRESS,
-      RNG,
+      RNG.abi,
       signer
     );
-    console.log('RNGContract', RNGContract);
     const txn = await RNGContract.requestRandomWords();
+
     setTimeout(() => {
-      returnRandomness(RNGContract);
-  }, 300000);
+      displayRandomNumber(RNGContract);
+  }, 200000);
   }
 
   // const setNewGameAddress = async (gameContractFactory) => {
@@ -215,9 +214,9 @@ const App = () => {
 
   return (
     <div className="App">
-          {/* <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
-            New Game
-          </button> */}
+          <button className="cta-button connect-wallet-button" onClick={requestRandomNumber}>
+            Random Number
+          </button>
      
       <div className="container">
         <div className="header-container">
