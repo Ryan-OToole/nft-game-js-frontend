@@ -5,7 +5,6 @@ import SelectCharacter from './Components/SelectCharacter';
 import Arena from './Components/Arena';
 import { transformCharacterData, CONTRACT_GAME_ADDRESS } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
-// import RNG from './utils/RNG.json';
 import { ethers } from 'ethers';
 import LoadingIndicator from './Components/LoadingIndicator';
 
@@ -49,29 +48,23 @@ const App = () => {
     setIsLoading(false);
   }
 
+  const getRandomNumber = async () => {
+    let num1 = await gameContract.getRandomNumber();
+    console.log('num1', num1);
+  }
+
   const displayRandomNumber = async () => {
     console.log('inside display randomness');
-    // const provider = new ethers.providers.Web3Provider(window.ethereum);
-    // const signer = provider.getSigner();
-    // const gameContract = new ethers.Contract(
-    //   CONTRACT_GAME_ADDRESS,
-    //   myEpicGame.abi,
-    //   signer
-    // );
-    const txn2 = await gameContract.s_randomWords(1);
-    console.log('Number(txn2)', Number(txn2) % 10);
-    setRandomNumber(Number(txn2) % 10);
+    const txn2 = await gameContract.s_randomWords(0);
+    console.log('Number(txn2)', Number(txn2));
+    let newNumber = (Number(txn2) % 4);
+    console.log('newNumber', newNumber);
+    let testNumber = (10 % 5);
+    console.log('testNumber', testNumber);
   }
 
   const requestRandomNumber = async () => {
     console.log('randomness sequence beginning');
-    // const provider = new ethers.providers.Web3Provider(window.ethereum);
-    // const signer = provider.getSigner();
-    // const gameContract = new ethers.Contract(
-    //   CONTRACT_GAME_ADDRESS,
-    //   myEpicGame.abi,
-    //   signer
-    // );
     const txn = await gameContract.requestRandomWords();
   }
 
@@ -109,19 +102,7 @@ const App = () => {
         return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} />); 
       }
     }
-    // else if (currentAccount && characterNFT && !bossHome) {
-    //   return (
-    //     <div className="connect-wallet-container">
-    //       <img
-    //         src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
-    //         alt="Monty Python Gif"
-    //       />
-    //       <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
-    //         Play a new game? The blockchain needs you...
-    //       </button>
-    //     </div>
-    //   )
-    // }
+
     else if (currentAccount && characterNFT) {
       return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} />);
     }
@@ -174,6 +155,12 @@ const App = () => {
       }
     }
 
+    const handleRandomNumberEvent = (randomNumber, string) => {
+      console.log(Number(randomNumber));
+      console.log('randomNumber', randomNumber);
+      console.log('string', string);
+    }
+
     const fetchNftMetadata = async () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -184,7 +171,8 @@ const App = () => {
         signer
       );
       setGameContract(gameContract);
-      gameContract.on('NftDeath', handleNFTDeath)
+      gameContract.on('NftDeath', handleNFTDeath);
+      gameContract.on('RandomNumberEvent', handleRandomNumberEvent);
       const txn = await gameContract.checkIfUserHasNFT();
       if (txn.name) {
         setCharacterNFT(transformCharacterData(txn));
@@ -200,11 +188,15 @@ const App = () => {
 
   return (
     <div className="App">
+      
           <button className="cta-button connect-wallet-button" onClick={requestRandomNumber}>
             Request Random Number
           </button>
           <button className="cta-button connect-wallet-button" onClick={displayRandomNumber}>
             Display Random Number
+          </button>
+          <button className="cta-button connect-wallet-button" onClick={getRandomNumber}>
+          getRandomNumber
           </button>
      
       <div className="container">
