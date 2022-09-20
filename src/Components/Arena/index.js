@@ -104,7 +104,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                     }
                     setPlayers(newPlayerArr);
                 }
-                if (newBossHP == 0) {
+                if (newBossHP === 0) {
                     setNftDeathBoss(true);
                     setBoss(null);
                     setTimeout(() => {
@@ -260,6 +260,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                     <p className="header gradient-text">{`Another player's NFT has died =)  Don't worry. You got this!`}</p>
                     <img
                         src={'https://i.imgur.com/NVA0aZH.png'}
+                        alt=""
                     />
                 </div>
             )}

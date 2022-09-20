@@ -3,9 +3,9 @@ import twitterLogo from './assets/twitter-logo.svg';
 import './App.css';
 import SelectCharacter from './Components/SelectCharacter';
 import Arena from './Components/Arena';
-import { transformCharacterData, RNG_CONTRACT_ADDRESS, CONTRACT_GAME_ADDRESS } from './constants';
+import { transformCharacterData, CONTRACT_GAME_ADDRESS } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
-import RNG from './utils/RNG.json';
+// import RNG from './utils/RNG.json';
 import { ethers } from 'ethers';
 import LoadingIndicator from './Components/LoadingIndicator';
 
@@ -47,25 +47,30 @@ const App = () => {
     setIsLoading(false);
   }
 
-  const displayRandomNumber = async (RNGContract) => {
-    const txn = await RNGContract.returnRandomNumber();
-    console.log('txn', txn);
+  const displayRandomNumber = async () => {
+    console.log('inside display randomness');
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const gameContract = new ethers.Contract(
+      CONTRACT_GAME_ADDRESS,
+      myEpicGame.abi,
+      signer
+    );
+    const txn2 = await gameContract.s_randomWords(1);
+    
+    console.log('Number(txn2)', Number(txn2) % 10);
   }
 
   const requestRandomNumber = async () => {
     console.log('randomness sequence beginning');
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const RNGContract = new ethers.Contract(
-      RNG_CONTRACT_ADDRESS,
-      RNG.abi,
+    const gameContract = new ethers.Contract(
+      CONTRACT_GAME_ADDRESS,
+      myEpicGame.abi,
       signer
     );
-    const txn = await RNGContract.requestRandomWords();
-
-    setTimeout(() => {
-      displayRandomNumber(RNGContract);
-  }, 200000);
+    const txn = await gameContract.requestRandomWords();
   }
 
   // const setNewGameAddress = async (gameContractFactory) => {
@@ -215,7 +220,10 @@ const App = () => {
   return (
     <div className="App">
           <button className="cta-button connect-wallet-button" onClick={requestRandomNumber}>
-            Random Number
+            Request Random Number
+          </button>
+          <button className="cta-button connect-wallet-button" onClick={displayRandomNumber}>
+            Display Random Number
           </button>
      
       <div className="container">
