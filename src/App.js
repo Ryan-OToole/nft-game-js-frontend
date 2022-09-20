@@ -20,6 +20,8 @@ const App = () => {
   const [characterNFT, setCharacterNFT] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
+  const [gameContract, setGameContract] = useState(null);
+  const [randomNumber, setRandomNumber] = useState(null);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -49,50 +51,30 @@ const App = () => {
 
   const displayRandomNumber = async () => {
     console.log('inside display randomness');
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const gameContract = new ethers.Contract(
-      CONTRACT_GAME_ADDRESS,
-      myEpicGame.abi,
-      signer
-    );
+    // const provider = new ethers.providers.Web3Provider(window.ethereum);
+    // const signer = provider.getSigner();
+    // const gameContract = new ethers.Contract(
+    //   CONTRACT_GAME_ADDRESS,
+    //   myEpicGame.abi,
+    //   signer
+    // );
     const txn2 = await gameContract.s_randomWords(1);
-    
     console.log('Number(txn2)', Number(txn2) % 10);
+    setRandomNumber(Number(txn2) % 10);
   }
 
   const requestRandomNumber = async () => {
     console.log('randomness sequence beginning');
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-    const gameContract = new ethers.Contract(
-      CONTRACT_GAME_ADDRESS,
-      myEpicGame.abi,
-      signer
-    );
+    // const provider = new ethers.providers.Web3Provider(window.ethereum);
+    // const signer = provider.getSigner();
+    // const gameContract = new ethers.Contract(
+    //   CONTRACT_GAME_ADDRESS,
+    //   myEpicGame.abi,
+    //   signer
+    // );
     const txn = await gameContract.requestRandomWords();
   }
 
-  // const setNewGameAddress = async (gameContractFactory) => {
-  //   let gameArray = await gameContractFactory.getDeployedGames();
-  //   setContractAddress(gameArray[gameArray.length - 1]);
-  //   console.log('gameArray', gameArray);
-  // } 
-
-  // const handleNewGame = async () => {
-  //     console.log('Checking for Character NFT fucking shit monkey address:');
-  //     const provider = new ethers.providers.Web3Provider(window.ethereum);
-  //     const signer = provider.getSigner();
-  //     const gameContractFactory = new ethers.Contract(
-  //       CONTRACT_FACTORY_ADDRESS,
-  //       myEpicGameFactory.abi,
-  //       signer
-  //     );
-  //     const game = await gameContractFactory.deployGame();
-  //     setTimeout(() => {
-  //       setNewGameAddress(gameContractFactory);
-  //   }, 10000);
-  // }
 
   const renderContent = () => {
     if (isLoading) {
@@ -153,11 +135,9 @@ const App = () => {
         return;
       }
       let chainId = await ethereum.request({ method: 'eth_chainId' });
-      console.log("Connected to chain " + chainId);
-      // String, hex code of the chainId of the Rinkebey test network
-      const rinkebyChainId = "0x4";
-      if (chainId !== rinkebyChainId) {
-        alert("You are not connected to the Rinkeby Test Network!");
+      const goerliChainId = "0x5";
+      if (chainId !== goerliChainId) {
+        alert("You are not connected to the Goerli Test Network!");
       }
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       console.log('connected:', accounts[0]);
@@ -169,8 +149,8 @@ const App = () => {
 
   const checkNetwork = async () => {
     try {
-      if (window.ethereum.networkVersion !== '4') {
-        alert('Please connect to Rinkeby');
+      if (window.ethereum.networkVersion !== '5') {
+        alert('Please connect to Goerli');
       }
     }
     catch (error) {
@@ -203,6 +183,7 @@ const App = () => {
         myEpicGame.abi,
         signer
       );
+      setGameContract(gameContract);
       gameContract.on('NftDeath', handleNFTDeath)
       const txn = await gameContract.checkIfUserHasNFT();
       if (txn.name) {
