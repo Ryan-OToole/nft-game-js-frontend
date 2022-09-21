@@ -21,6 +21,44 @@ const App = () => {
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
   const [gameContract, setGameContract] = useState(null);
   const [randomNumber, setRandomNumber] = useState(null);
+  const [randomNumberSequenceOn, setRandomNumberSequenceOn] = useState(false);
+  const [bossHome, setBossHome] = useState({hp: 5});
+
+  useEffect(() => {
+    console.log('randomNumberSequenceOn', randomNumberSequenceOn);
+    if (!randomNumberSequenceOn) {
+      alert(`Please complete upcoming Metamask transaction with GoerliEth to generate random number from Chainlink for the game. Don't worry I loaded a subscription with LINK you just have to pay transaction fee =)`);
+      const handleRandomNumberEvent = (randomNumber, string) => {
+        console.log('Number(randomNumber)', Number(randomNumber));
+        setRandomNumber(randomNumber);
+        console.log('string', string);
+      }
+
+      const handleRandomWordsRequest = async (gameContract) => {
+        console.log('inside random words!!!');
+        await gameContract.requestRandomWords();
+      }
+  
+      const { ethereum } = window;
+  
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const gameContract = new ethers.Contract(
+            CONTRACT_GAME_ADDRESS,
+            myEpicGame.abi,
+            signer
+        );
+        setGameContract(gameContract);
+        console.log('turning random number listener on');
+        handleRandomWordsRequest(gameContract);
+        gameContract.on('RandomNumberEvent', handleRandomNumberEvent);
+        setRandomNumberSequenceOn(true);
+      } else {
+      console.log('Ethereum object not found');
+      }
+    }
+}, []);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -48,30 +86,29 @@ const App = () => {
     setIsLoading(false);
   }
 
-  const getRandomNumber = async () => {
-    let num1 = await gameContract.getRandomNumber();
-    console.log('num1', num1);
-  }
-
-  const displayRandomNumber = async () => {
-    console.log('inside display randomness');
-    const txn2 = await gameContract.s_randomWords(0);
-    console.log('Number(txn2)', Number(txn2));
-    let newNumber = (Number(txn2) % 4);
-    console.log('newNumber', newNumber);
-    let testNumber = (10 % 5);
-    console.log('testNumber', testNumber);
-  }
-
-  const requestRandomNumber = async () => {
-    console.log('randomness sequence beginning');
-    const txn = await gameContract.requestRandomWords();
+  const handleNewGame = () => {
+    console.log('more work for you sir =)');
+    // look at Stephen Grider video how to 
+    // instantiate a new game from frontend
   }
 
 
   const renderContent = () => {
     if (isLoading) {
      return <LoadingIndicator />;
+    }
+    if (bossHome.hp === 0) {
+      return (
+        <div className="connect-wallet-container">
+          <img
+            src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
+            alt="Monty Python Gif"
+          />
+          <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+            Play a new game? The blockchain needs you...
+          </button>
+        </div>
+      )
     }
     if (!currentAccount) {
       return (
@@ -102,9 +139,8 @@ const App = () => {
         return (<SelectCharacter setCharacterNFT={setCharacterNFT} currentAccount={currentAccount} setPlayers={setPlayers} />); 
       }
     }
-
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} />);
     }
   }
 
@@ -154,13 +190,6 @@ const App = () => {
       }, 5000);
       }
     }
-
-    const handleRandomNumberEvent = (randomNumber, string) => {
-      console.log(Number(randomNumber));
-      console.log('randomNumber', randomNumber);
-      console.log('string', string);
-    }
-
     const fetchNftMetadata = async () => {
       console.log('Checking for Character NFT on address:', currentAccount);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -172,7 +201,6 @@ const App = () => {
       );
       setGameContract(gameContract);
       gameContract.on('NftDeath', handleNFTDeath);
-      gameContract.on('RandomNumberEvent', handleRandomNumberEvent);
       const txn = await gameContract.checkIfUserHasNFT();
       if (txn.name) {
         setCharacterNFT(transformCharacterData(txn));
@@ -187,18 +215,7 @@ const App = () => {
   }, [currentAccount, CONTRACT_GAME_ADDRESS]);
 
   return (
-    <div className="App">
-      
-          <button className="cta-button connect-wallet-button" onClick={requestRandomNumber}>
-            Request Random Number
-          </button>
-          <button className="cta-button connect-wallet-button" onClick={displayRandomNumber}>
-            Display Random Number
-          </button>
-          <button className="cta-button connect-wallet-button" onClick={getRandomNumber}>
-          getRandomNumber
-          </button>
-     
+    <div className="App">     
       <div className="container">
         <div className="header-container">
           <p className="header gradient-text">⚔️ Darkwing Nights ⚔️</p>
