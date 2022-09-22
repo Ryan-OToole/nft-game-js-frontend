@@ -4,15 +4,16 @@ import { transformVillianData, transformCharacterData, CONTRACT_GAME_ADDRESS } f
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
 import LoadingIndicator from '../../Components/LoadingIndicator';
+import criticalHitPNG from '../../Components/Arena/index.js';
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumber }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumber, setNftDeathBoss }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [nftDeathOther, setNftDeathOther] = useState(false);
-    const [nftDeathBoss, setNftDeathBoss] = useState(false);
+    const [criticalHit, setCriticalHit] = useState(false);
 
     useEffect(() => {
         const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
@@ -77,12 +78,12 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             
             console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
             if (newBossHP === 0) {
-                setNftDeathBoss(true);
                 setBoss(null);
                 console.log('inside attack function area boss has died setting bossHP to zero');
                 setBossHome((prevState) => {
                     return {...prevState, hp: bossHP};
                 });
+                setNftDeathBoss(true);
                 setTimeout(() => {
                     setNftDeathBoss(false);
                 }, 5000);
@@ -128,6 +129,13 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             fetchBoss();
             gameContract.on('AttackComplete', onAttackComplete);
         }
+        if (randomNumber === 4) {
+            setCriticalHit(true);
+            setTimeout(() => {
+                setCriticalHit(false);
+            }, 5000);
+        }
+
         return () => {
             if (gameContract) {
                 gameContract.off('AttackComplete', onAttackComplete);
@@ -192,22 +200,28 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         ))
     }
 
+    const renderToast = () => {
+        console.log('randomNumber', randomNumber);
+        let localAttackDamage = randomNumber === 4 ? characterNFT.attackDamage : (characterNFT.attackDamage * 3)
+        {boss && characterNFT && (
+            <div id="toast" className={showToast ? 'show' : ''}>
+                <div id="desc">{`💥 ${boss.name} was hit for ${localAttackDamage}!`}</div>
+            </div>
+        )}
+    }
+
     return (
         <div className="arena-container">
-            {boss && characterNFT && (
-            <div id="toast" className={showToast ? 'show' : ''}>
-                <div id="desc">{`💥 ${boss.name} was hit for ${characterNFT.attackDamage}!`}</div>
-            </div>
-            )}
-        { nftDeathBoss && (
+        {renderToast()}
+        { criticalHit && (
             <div>
-                <p className="header gradient-text">{`You killed the boss NFT :)  Celebrate Good Times ;)`}</p>
+                <p className="header gradient-text">Faith is on your side. You scored a critical hit. Thank God or Chainlink both are perfectly random</p>
                 <img
-                    src={'https://i.imgur.com/SOGZ689.png'}
+                    src={criticalHitPNG}
                     alt=""
                 />
             </div>
-        )} 
+        )}
         { boss && (
             <div className="boss-container">
                 <div className={`boss-content ${attackState}`}>

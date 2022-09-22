@@ -23,6 +23,7 @@ const App = () => {
   const [randomNumber, setRandomNumber] = useState(null);
   const [randomNumberSequenceOn, setRandomNumberSequenceOn] = useState(false);
   const [bossHome, setBossHome] = useState({hp: 5});
+  const [nftDeathBoss, setNftDeathBoss] = useState(false);
 
   useEffect(() => {
     console.log('randomNumberSequenceOn', randomNumberSequenceOn);
@@ -92,23 +93,33 @@ const App = () => {
     // instantiate a new game from frontend
   }
 
-
   const renderContent = () => {
+
     if (isLoading) {
      return <LoadingIndicator />;
     }
     if (bossHome.hp === 0) {
-      return (
-        <div className="connect-wallet-container">
-          <img
-            src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
-            alt="Monty Python Gif"
-          />
-          <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
-            Play a new game? The blockchain needs you...
-          </button>
+      {
+        nftDeathBoss
+            ?
+        <div>
+          <p className="header gradient-text">{`You killed the The Joker :)  Celebrate Good Times ;)`}</p>
+            <img
+              src={'https://i.imgur.com/SOGZ689.png'}
+              alt=""
+            />
         </div>
-      )
+            :
+            <div className="connect-wallet-container">
+            <img
+              src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
+              alt="Monty Python Gif"
+            />
+            <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+              Play a new game? The blockchain needs you...
+            </button>
+          </div>
+      }
     }
     if (!currentAccount) {
       return (
@@ -140,7 +151,7 @@ const App = () => {
       }
     }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} setNftDeathBoss={setNftDeathBoss} />);
     }
   }
 
@@ -221,15 +232,6 @@ const App = () => {
           <p className="header gradient-text">⚔️ Darkwing Nights ⚔️</p>
           <p className="sub-text">Slay your way on and off the chain!</p>
         </div>
-        {/* <div className="connect-wallet-container">
-          <img
-            src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
-            alt="Monty Python Gif"
-          />
-          <button className="cta-button connect-wallet-button" onClick={connectWallet}>
-            Play a new game? The blockchain needs you...
-          </button>
-        </div> */}
         { renderContent() }
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
