@@ -3,10 +3,10 @@ import { ethers } from 'ethers';
 import { transformVillianData, transformCharacterData, CONTRACT_GAME_ADDRESS } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
-import LoadingIndicator from '../../Components/LoadingIndicator';
-import criticalHitPNG from '../../Components/Arena/index.js';
+import LoadingIndicator from "../../Components/LoadingIndicator";
+import criticalHitPNG from '../../assets/critical-hit.png'
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumber, setNftDeathBoss }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumberArray, setNftDeathBoss, randomNumber, setRandomNumber }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
@@ -14,7 +14,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const [showToast, setShowToast] = useState(false);
     const [nftDeathOther, setNftDeathOther] = useState(false);
     const [criticalHit, setCriticalHit] = useState(false);
-
+ 
     useEffect(() => {
         const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
             if (allPlayersInGame) {
@@ -70,7 +70,13 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             setBoss(transformVillianData(bossTxn));
             setBossHome(transformVillianData(bossTxn));
         }
+
         const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
+            if (randomNumberArray !== []) {
+                console.log('inside onAttackComplete randomNumberArray', randomNumberArray);
+                console.log('inside onAttackComplete randomNumberArray[randomNumberArray - 1]', randomNumberArray[randomNumberArray - 1]);
+                setRandomNumber(randomNumberArray[randomNumberArray - 1]);
+            }
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
@@ -130,6 +136,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             gameContract.on('AttackComplete', onAttackComplete);
         }
         if (randomNumber === 4) {
+            console.log("inside critical hit logic...");
             setCriticalHit(true);
             setTimeout(() => {
                 setCriticalHit(false);
@@ -146,8 +153,8 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const runAttackAction = async () => {
         try {
             if (gameContract) {
-                setAttackState('attacking...');
-                console.log('attacking boss');
+                setAttackState('attacking');
+                console.log('Attacking boss...');
                 const attackTxn = await gameContract.attackBoss();
                 await attackTxn.wait();
                 setAttackState('hit');
@@ -201,27 +208,30 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     }
 
     const renderToast = () => {
-        console.log('randomNumber', randomNumber);
-        let localAttackDamage = randomNumber === 4 ? characterNFT.attackDamage : (characterNFT.attackDamage * 3)
-        {boss && characterNFT && (
-            <div id="toast" className={showToast ? 'show' : ''}>
-                <div id="desc">{`💥 ${boss.name} was hit for ${localAttackDamage}!`}</div>
-            </div>
-        )}
+        let localAttackDamage = randomNumberArray[randomNumberArray.length - 1] === 4 ? (characterNFT.attackDamage * 3) : characterNFT.attackDamage;        
+        console.log('inside toast randomNumber', randomNumber);
+        console.log('randomNumberArray[randomNumberArray.length - 1]', randomNumberArray[randomNumberArray.length - 1]);
+        if (boss && characterNFT) {
+            return (
+                <div id="toast" className={showToast ? 'show' : ''}>
+                    <div id="desc">{`💥 ${boss.name} was hit for ${localAttackDamage}!`}</div>
+                </div>
+            );
+        }
     }
 
     return (
         <div className="arena-container">
-        {renderToast()}
         { criticalHit && (
             <div>
                 <p className="header gradient-text">Faith is on your side. You scored a critical hit. Thank God or Chainlink both are perfectly random</p>
                 <img
                     src={criticalHitPNG}
-                    alt=""
+                    alt="critcalhit"
                 />
             </div>
         )}
+        {renderToast()}
         { boss && (
             <div className="boss-container">
                 <div className={`boss-content ${attackState}`}>

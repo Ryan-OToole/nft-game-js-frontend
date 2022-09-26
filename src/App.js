@@ -7,9 +7,10 @@ import { transformCharacterData, CONTRACT_GAME_ADDRESS } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
 import { ethers } from 'ethers';
 import LoadingIndicator from './Components/LoadingIndicator';
+import JokerDeath from './assets/Joker_death.png';
 
 // Constants
-const TWITTER_HANDLE = 'web3ForToday';
+const TWITTER_HANDLE = 'plentyWeb3';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 
 const App = () => {
@@ -24,19 +25,18 @@ const App = () => {
   const [randomNumberSequenceOn, setRandomNumberSequenceOn] = useState(false);
   const [bossHome, setBossHome] = useState({hp: 5});
   const [nftDeathBoss, setNftDeathBoss] = useState(false);
+  const [randomNumberArray, setRandomNumberArray] = useState([]);
 
   useEffect(() => {
     console.log('randomNumberSequenceOn', randomNumberSequenceOn);
     if (!randomNumberSequenceOn) {
       alert(`Please complete upcoming Metamask transaction with GoerliEth to generate random number from Chainlink for the game. Don't worry I loaded a subscription with LINK you just have to pay transaction fee =)`);
       const handleRandomNumberEvent = (randomNumber, string) => {
-        console.log('Number(randomNumber)', Number(randomNumber));
-        setRandomNumber(randomNumber);
-        console.log('string', string);
+        setRandomNumber(Number(randomNumber));
+        setRandomNumberArray(randomNumberArray => [...randomNumberArray, Number(randomNumber)]);
       }
 
       const handleRandomWordsRequest = async (gameContract) => {
-        console.log('inside random words!!!');
         await gameContract.requestRandomWords();
       }
   
@@ -98,29 +98,6 @@ const App = () => {
     if (isLoading) {
      return <LoadingIndicator />;
     }
-    if (bossHome.hp === 0) {
-      {
-        nftDeathBoss
-            ?
-        <div>
-          <p className="header gradient-text">{`You killed the The Joker :)  Celebrate Good Times ;)`}</p>
-            <img
-              src={'https://i.imgur.com/SOGZ689.png'}
-              alt=""
-            />
-        </div>
-            :
-            <div className="connect-wallet-container">
-            <img
-              src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
-              alt="Monty Python Gif"
-            />
-            <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
-              Play a new game? The blockchain needs you...
-            </button>
-          </div>
-      }
-    }
     if (!currentAccount) {
       return (
         <div className="connect-wallet-container">
@@ -151,7 +128,7 @@ const App = () => {
       }
     }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} setNftDeathBoss={setNftDeathBoss} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumberArray={randomNumberArray} setNftDeathBoss={setNftDeathBoss} setRandomNumber={setRandomNumber} randomNumber={randomNumber} />);
     }
   }
 
@@ -225,14 +202,45 @@ const App = () => {
 
   }, [currentAccount, CONTRACT_GAME_ADDRESS]);
 
+  const renderEnding = () => {
+      return (
+        <div>
+          <div>
+          <p className="header gradient-text">{`You killed the The Joker :)  Celebrate Good Times ;)`}</p>
+            <img
+              src={JokerDeath}
+              alt=""
+            />
+          </div>
+          <div className="bufferzone"></div>
+            <div className="connect-wallet-container">
+              <img
+                src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
+                alt="Monty Python Gif"
+              />
+              <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
+                Play a new game? The blockchain needs you...
+              </button>
+            </div>
+        </div>
+
+      );
+    }
+
   return (
-    <div className="App">     
+    <div className="App"> 
       <div className="container">
         <div className="header-container">
           <p className="header gradient-text">⚔️ Darkwing Nights ⚔️</p>
           <p className="sub-text">Slay your way on and off the chain!</p>
         </div>
-        { renderContent() }
+        {
+          bossHome.hp === 0
+                ?
+            renderEnding()
+                :
+            renderContent() 
+        }
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
           <a
