@@ -6,7 +6,7 @@ import './Arena.css'
 import LoadingIndicator from "../../Components/LoadingIndicator";
 import criticalHitPNG from '../../assets/critical-hit.png'
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumberArray, setNftDeathBoss, randomNumber, setRandomNumber }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumberArray, setNftDeathBoss }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
@@ -14,6 +14,8 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const [showToast, setShowToast] = useState(false);
     const [nftDeathOther, setNftDeathOther] = useState(false);
     const [criticalHit, setCriticalHit] = useState(false);
+    const [counter, setCounter] = useState(0);
+
  
     useEffect(() => {
         const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
@@ -72,15 +74,17 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         }
 
         const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
-            if (randomNumberArray !== []) {
-                console.log('inside onAttackComplete randomNumberArray', randomNumberArray);
-                console.log('inside onAttackComplete randomNumberArray[randomNumberArray - 1]', randomNumberArray[randomNumberArray - 1]);
-                setRandomNumber(randomNumberArray[randomNumberArray - 1]);
-            }
+            console.log('randomNumberArray', randomNumberArray);
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
             const damageDone = accumulatedDamage.toNumber();
+            if (counter === 4) {
+                setCounter(0);
+            }
+            else {
+                setCounter(counter + 1);
+            }
             
             console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
             if (newBossHP === 0) {
@@ -135,14 +139,6 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             fetchBoss();
             gameContract.on('AttackComplete', onAttackComplete);
         }
-        if (randomNumber === 4) {
-            console.log("inside critical hit logic...");
-            setCriticalHit(true);
-            setTimeout(() => {
-                setCriticalHit(false);
-            }, 5000);
-        }
-
         return () => {
             if (gameContract) {
                 gameContract.off('AttackComplete', onAttackComplete);
@@ -208,9 +204,19 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     }
 
     const renderToast = () => {
-        let localAttackDamage = randomNumberArray[randomNumberArray.length - 1] === 4 ? (characterNFT.attackDamage * 3) : characterNFT.attackDamage;        
-        console.log('inside toast randomNumber', randomNumber);
-        console.log('randomNumberArray[randomNumberArray.length - 1]', randomNumberArray[randomNumberArray.length - 1]);
+        console.log('inside toast randomNumberArray:', randomNumberArray);
+        let randomNumber;
+        if (randomNumberArray) {
+            randomNumber = randomNumberArray[counter];
+        }
+        console.log('randomNumber', randomNumber);
+        let localAttackDamage;
+        if (randomNumber === 4) {
+            localAttackDamage = (characterNFT.attackDamage * 3);
+        }
+        else {
+            localAttackDamage = characterNFT.attackDamage;
+        }
         if (boss && characterNFT) {
             return (
                 <div id="toast" className={showToast ? 'show' : ''}>
@@ -224,7 +230,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         <div className="arena-container">
         { criticalHit && (
             <div>
-                <p className="header gradient-text">Faith is on your side. You scored a critical hit. Thank God or Chainlink both are perfectly random</p>
+                <p className="header gradient-text">Wow a Critical Hit!!! 3X damage!!!</p>
                 <img
                     src={criticalHitPNG}
                     alt="critcalhit"

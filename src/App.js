@@ -21,7 +21,6 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [nftDeathOwner, setNftDeathOwner] = useState(false);
   const [gameContract, setGameContract] = useState(null);
-  const [randomNumber, setRandomNumber] = useState(null);
   const [randomNumberSequenceOn, setRandomNumberSequenceOn] = useState(false);
   const [bossHome, setBossHome] = useState({hp: 5});
   const [nftDeathBoss, setNftDeathBoss] = useState(false);
@@ -32,8 +31,10 @@ const App = () => {
     if (!randomNumberSequenceOn) {
       alert(`Please complete upcoming Metamask transaction with GoerliEth to generate random number from Chainlink for the game. Don't worry I loaded a subscription with LINK you just have to pay transaction fee =)`);
       const handleRandomNumberEvent = (randomNumber, string) => {
-        setRandomNumber(Number(randomNumber));
+        console.log('randomNumber', Number(randomNumber));
+        console.log('string', string);
         setRandomNumberArray(randomNumberArray => [...randomNumberArray, Number(randomNumber)]);
+        console.log('randomNumberArray', randomNumberArray);
       }
 
       const handleRandomWordsRequest = async (gameContract) => {
@@ -128,7 +129,7 @@ const App = () => {
       }
     }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumberArray={randomNumberArray} setNftDeathBoss={setNftDeathBoss} setRandomNumber={setRandomNumber} randomNumber={randomNumber} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumberArray={randomNumberArray} setNftDeathBoss={setNftDeathBoss} />);
     }
   }
 
@@ -206,7 +207,9 @@ const App = () => {
       return (
         <div>
           <div>
-          <p className="header gradient-text">{`You killed the The Joker :)  Celebrate Good Times ;)`}</p>
+          <br />
+          <br />
+          <p className="header gradient-text">{`The Joker has been slain!!!`}</p>
             <img
               src={JokerDeath}
               alt=""
