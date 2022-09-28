@@ -57,6 +57,10 @@
   padding-bottom: 20px;
 }
 
+.bufferzone {
+  padding-bottom: 150px;
+}
+
 .connect-wallet-button {
   background-image: linear-gradient(
     to right,

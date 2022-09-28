@@ -1,5 +1,5 @@
-const CONTRACT_FACTORY_ADDRESS = '0xF6aA3eec7618F542827B8F074Ca0f3Bd931a8E51';
-const RNG_CONTRACT_ADDRESS='0xE134fdcFC017c858eb8d8203Ed648c6fcDa8178b';
+const CONTRACT_GAME_ADDRESS = '0x68D3f5579dEa4aE136e6922Be201e7C81E65C407';
+
 const transformCharacterData = (characterData) => {
     return {
         sender: characterData.sender,
@@ -22,4 +22,4 @@ const transformVillianData = (characterData) => {
     }
 }
 
-export { CONTRACT_FACTORY_ADDRESS, transformCharacterData, transformVillianData, RNG_CONTRACT_ADDRESS };
+export { transformCharacterData, transformVillianData, CONTRACT_GAME_ADDRESS };
