@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import { transformVillianData, transformCharacterData } from '../../constants';
+import { transformVillianData, transformCharacterData, CONTRACT_GAME_ADDRESS } from '../../constants';
 import myEpicGame from '../../utils/MyEpicGame.json';
 import './Arena.css'
-import LoadingIndicator from '../../Components/LoadingIndicator';
+import LoadingIndicator from "../../Components/LoadingIndicator";
+import criticalHitPNG from '../../assets/critical-hit.png'
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, contractAddress }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumberArray, setNftDeathBoss }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
     const [attackState, setAttackState] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [nftDeathOther, setNftDeathOther] = useState(false);
-    const [nftDeathBoss, setNftDeathBoss] = useState(false);
+    const [criticalHit, setCriticalHit] = useState(false);
+    const [counter, setCounter] = useState(0);
 
+ 
     useEffect(() => {
         const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
             if (allPlayersInGame) {
@@ -42,7 +45,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             const provider = new ethers.providers.Web3Provider(ethereum);
             const signer = provider.getSigner();
             const gameContract = new ethers.Contract(
-                contractAddress,
+                CONTRACT_GAME_ADDRESS,
                 myEpicGame.abi,
                 signer
             );
@@ -69,58 +72,69 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             setBoss(transformVillianData(bossTxn));
             setBossHome(transformVillianData(bossTxn));
         }
+
         const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
+            console.log('randomNumberArray', randomNumberArray);
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
             const damageDone = accumulatedDamage.toNumber();
+            if (counter === 4) {
+                setCounter(0);
+            }
+            else {
+                setCounter(counter + 1);
+            }
             
             console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
-
-            if (currentAccount === sender.toLowerCase()) {
-                setBoss((prevState) => {
-                    return {...prevState, hp: bossHP};
-                });
+            if (newBossHP === 0) {
+                setBoss(null);
+                console.log('inside attack function area boss has died setting bossHP to zero');
                 setBossHome((prevState) => {
                     return {...prevState, hp: bossHP};
                 });
-                setCharacterNFT((prevState) => {
-                    return {...prevState, hp: playerHP, damageDone: damageDone};
-                });
+                setNftDeathBoss(true);
+                setTimeout(() => {
+                    setNftDeathBoss(false);
+                }, 5000);
             }
-            if (currentAccount !== sender.toLowerCase()) {
-                setBoss((prevState) => {
-                    return {...prevState, hp: bossHP};
-                })
-                setBossHome((prevState) => {
-                    return {...prevState, hp: bossHP};
-                })
-                let playerArr = [];
-                for (let player of allPlayersInGame) {
-                    playerArr.push(transformCharacterData(player));
+            else {
+                if (currentAccount === sender.toLowerCase()) {
+                    setBoss((prevState) => {
+                        return {...prevState, hp: bossHP};
+                    });
+                    setBossHome((prevState) => {
+                        return {...prevState, hp: bossHP};
+                    });
+                    setCharacterNFT((prevState) => {
+                        return {...prevState, hp: playerHP, damageDone: damageDone};
+                    });
                 }
-                    let newPlayerArr = [];
-                    for (let player of playerArr) {
-                      if ( !(currentAccount === sender.toLowerCase()) ) {
-                        if (playerHP > 0) {
-                            player.damageDone = damageDone;
-                            player.hp = playerHP;
-                            newPlayerArr.push(player);
-                        }
-                      }
+                if (currentAccount !== sender.toLowerCase()) {
+                    setBoss((prevState) => {
+                        return {...prevState, hp: bossHP};
+                    })
+                    setBossHome((prevState) => {
+                        return {...prevState, hp: bossHP};
+                    })
+                    let playerArr = [];
+                    for (let player of allPlayersInGame) {
+                        playerArr.push(transformCharacterData(player));
                     }
-                    setPlayers(newPlayerArr);
-                }
-                if (newBossHP == 0) {
-                    setNftDeathBoss(true);
-                    setBoss(null);
-                    setBossHome(null);
-                    setTimeout(() => {
-                        setNftDeathBoss(false);
-                    }, 5000);
+                        let newPlayerArr = [];
+                        for (let player of playerArr) {
+                          if ( !(currentAccount === sender.toLowerCase()) ) {
+                            if (playerHP > 0) {
+                                player.damageDone = damageDone;
+                                player.hp = playerHP;
+                                newPlayerArr.push(player);
+                            }
+                          }
+                        }
+                        setPlayers(newPlayerArr);
+                    }
                 }
             }
-
         if (gameContract) {
             fetchBoss();
             gameContract.on('AttackComplete', onAttackComplete);
@@ -135,8 +149,8 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const runAttackAction = async () => {
         try {
             if (gameContract) {
-                setAttackState('attacking...');
-                console.log('attacking boss');
+                setAttackState('attacking');
+                console.log('Attacking boss...');
                 const attackTxn = await gameContract.attackBoss();
                 await attackTxn.wait();
                 setAttackState('hit');
@@ -189,26 +203,41 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         ))
     }
 
+    const renderToast = () => {
+        console.log('inside toast randomNumberArray:', randomNumberArray);
+        let randomNumber;
+        if (randomNumberArray) {
+            randomNumber = randomNumberArray[counter];
+        }
+        console.log('randomNumber', randomNumber);
+        let localAttackDamage;
+        if (randomNumber === 4) {
+            localAttackDamage = (characterNFT.attackDamage * 3);
+        }
+        else {
+            localAttackDamage = characterNFT.attackDamage;
+        }
+        if (boss && characterNFT) {
+            return (
+                <div id="toast" className={showToast ? 'show' : ''}>
+                    <div id="desc">{`💥 ${boss.name} was hit for ${localAttackDamage}!`}</div>
+                </div>
+            );
+        }
+    }
+
     return (
         <div className="arena-container">
-            {boss && characterNFT && (
-            <div id="toast" className={showToast ? 'show' : ''}>
-                <div id="desc">{`💥 ${boss.name} was hit for ${characterNFT.attackDamage}!`}</div>
-            </div>
-            )}
-        { nftDeathBoss && (
-
+        { criticalHit && (
             <div>
-                <p className="header gradient-text">{`You killed the boss NFT :)  Celebrate Good Times ;)`}</p>
+                <p className="header gradient-text">Wow a Critical Hit!!! 3X damage!!!</p>
                 <img
-                    src={'https://i.imgur.com/SOGZ689.png'}
-                    alt=""
+                    src={criticalHitPNG}
+                    alt="critcalhit"
                 />
-                </div>
-
-                
-         
-        )} 
+            </div>
+        )}
+        {renderToast()}
         { boss && (
             <div className="boss-container">
                 <div className={`boss-content ${attackState}`}>
@@ -268,6 +297,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                     <p className="header gradient-text">{`Another player's NFT has died =)  Don't worry. You got this!`}</p>
                     <img
                         src={'https://i.imgur.com/NVA0aZH.png'}
+                        alt=""
                     />
                 </div>
             )}
