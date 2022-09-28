@@ -28,6 +28,7 @@ const App = () => {
 
   useEffect(() => {
     console.log('randomNumberSequenceOn', randomNumberSequenceOn);
+    // random comment 
     if (!randomNumberSequenceOn) {
       alert(`Please complete upcoming Metamask transaction with GoerliEth to generate random number from Chainlink for the game. Don't worry I loaded a subscription with LINK you just have to pay transaction fee =)`);
       const handleRandomNumberEvent = (randomNumber, string) => {
