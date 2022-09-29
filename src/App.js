@@ -33,7 +33,7 @@ const App = () => {
       alert(`Please complete upcoming Metamask transaction with GoerliEth to generate random number from Chainlink for the game. Don't worry I loaded a subscription with LINK you just have to pay transaction fee =)`);
       const handleRandomNumberEvent = (requestId, randomNumber) => {
         console.log('requestId', Number(requestId));
-        console.log('randomArray', Number(randomNumber));
+        console.log('randomNumber', Number(randomNumber));
         setRandomNumber(Number(randomNumber));
         // setRandomNumberArray(randomNumberArray => [...randomNumberArray, Number(randomNumber)]);
       }
@@ -130,7 +130,7 @@ const App = () => {
       }
     }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} setNftDeathBoss={setNftDeathBoss} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} setRandomNumber={setRandomNumber} setNftDeathBoss={setNftDeathBoss} />);
     }
   }
 
@@ -216,7 +216,7 @@ const App = () => {
               alt=""
             />
           </div>
-          <div className="bufferzone"></div>
+          {/* <div className="bufferzone"></div>
             <div className="connect-wallet-container">
               <img
                 src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
@@ -225,7 +225,7 @@ const App = () => {
               <button className="cta-button connect-wallet-button" onClick={handleNewGame}>
                 Play a new game? The blockchain needs you...
               </button>
-            </div>
+            </div> */}
         </div>
 
       );

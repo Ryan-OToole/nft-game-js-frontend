@@ -6,7 +6,7 @@ import './Arena.css'
 import LoadingIndicator from "../../Components/LoadingIndicator";
 import criticalHitPNG from '../../assets/critical-hit.png'
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumber, setNftDeathBoss }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumber, setRandomNumber, setNftDeathBoss }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
@@ -72,7 +72,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
         }
 
         const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame, randomNumber) => {
-
+            setRandomNumber(Number(randomNumber));
             if (Number(randomNumber >= 4)) {
                 console.log('randomNumber inside critical hit logic', Number(randomNumber));
                 setCriticalHit(true);
@@ -80,7 +80,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
                     setCriticalHit(false);
                 }, 5000);
             }
-            console.log('randomNumber', randomNumber);
+            console.log('randomNumber', Number(randomNumber));
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
