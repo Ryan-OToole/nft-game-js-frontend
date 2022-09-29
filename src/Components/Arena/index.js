@@ -6,7 +6,7 @@ import './Arena.css'
 import LoadingIndicator from "../../Components/LoadingIndicator";
 import criticalHitPNG from '../../assets/critical-hit.png'
 
-const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumberArray, setNftDeathBoss }) => {
+const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlayers, setBossHome, randomNumber, setNftDeathBoss }) => {
 
     const [gameContract, setGameContract] = useState(null);
     const [boss, setBoss] = useState(null);
@@ -14,9 +14,7 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     const [showToast, setShowToast] = useState(false);
     const [nftDeathOther, setNftDeathOther] = useState(false);
     const [criticalHit, setCriticalHit] = useState(false);
-    const [counter, setCounter] = useState(0);
-
- 
+    
     useEffect(() => {
         const getPlayers = async (from, tokenID, characterIndex, allPlayersInGame) => {
             if (allPlayersInGame) {
@@ -73,19 +71,20 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
             setBossHome(transformVillianData(bossTxn));
         }
 
-        const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame) => {
-            console.log('randomNumberArray', randomNumberArray);
+        const onAttackComplete = async (from, newBossHP, newPlayerHP, accumulatedDamage, allPlayersInGame, randomNumber) => {
+
+            if (Number(randomNumber >= 4)) {
+                console.log('randomNumber inside critical hit logic', Number(randomNumber));
+                setCriticalHit(true);
+                setTimeout(() => {
+                    setCriticalHit(false);
+                }, 5000);
+            }
+            console.log('randomNumber', randomNumber);
             const bossHP = newBossHP.toNumber();
             const playerHP = newPlayerHP.toNumber();
             const sender = from.toString();
             const damageDone = accumulatedDamage.toNumber();
-            if (counter === 4) {
-                setCounter(0);
-            }
-            else {
-                setCounter(counter + 1);
-            }
-            
             console.log(`AttackComplete: Boss Hp: ${bossHP} Player Hp: ${playerHP} damageDone: ${damageDone}`);
             if (newBossHP === 0) {
                 setBoss(null);
@@ -204,14 +203,9 @@ const Arena = ({ characterNFT, setCharacterNFT, currentAccount, players, setPlay
     }
 
     const renderToast = () => {
-        console.log('inside toast randomNumberArray:', randomNumberArray);
-        let randomNumber;
-        if (randomNumberArray) {
-            randomNumber = randomNumberArray[counter];
-        }
-        console.log('randomNumber', randomNumber);
+        console.log('randomNumber inside renderToast', randomNumber);
         let localAttackDamage;
-        if (randomNumber === 4) {
+        if (randomNumber >= 4) {
             localAttackDamage = (characterNFT.attackDamage * 3);
         }
         else {

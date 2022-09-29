@@ -24,18 +24,18 @@ const App = () => {
   const [randomNumberSequenceOn, setRandomNumberSequenceOn] = useState(false);
   const [bossHome, setBossHome] = useState({hp: 5});
   const [nftDeathBoss, setNftDeathBoss] = useState(false);
-  const [randomNumberArray, setRandomNumberArray] = useState([]);
+  const [randomNumber, setRandomNumber] = useState(0);
 
   useEffect(() => {
     console.log('randomNumberSequenceOn', randomNumberSequenceOn);
     // random comment 
     if (!randomNumberSequenceOn) {
       alert(`Please complete upcoming Metamask transaction with GoerliEth to generate random number from Chainlink for the game. Don't worry I loaded a subscription with LINK you just have to pay transaction fee =)`);
-      const handleRandomNumberEvent = (randomNumber, string) => {
-        console.log('randomNumber', Number(randomNumber));
-        console.log('string', string);
-        setRandomNumberArray(randomNumberArray => [...randomNumberArray, Number(randomNumber)]);
-        console.log('randomNumberArray', randomNumberArray);
+      const handleRandomNumberEvent = (requestId, randomNumber) => {
+        console.log('requestId', Number(requestId));
+        console.log('randomArray', Number(randomNumber));
+        setRandomNumber(Number(randomNumber));
+        // setRandomNumberArray(randomNumberArray => [...randomNumberArray, Number(randomNumber)]);
       }
 
       const handleRandomWordsRequest = async (gameContract) => {
@@ -55,7 +55,7 @@ const App = () => {
         setGameContract(gameContract);
         console.log('turning random number listener on');
         handleRandomWordsRequest(gameContract);
-        gameContract.on('RandomNumberEvent', handleRandomNumberEvent);
+        gameContract.on('RequestFulfilled', handleRandomNumberEvent);
         setRandomNumberSequenceOn(true);
       } else {
       console.log('Ethereum object not found');
@@ -130,7 +130,7 @@ const App = () => {
       }
     }
     else if (currentAccount && characterNFT) {
-      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumberArray={randomNumberArray} setNftDeathBoss={setNftDeathBoss} />);
+      return (<Arena setCharacterNFT={setCharacterNFT} characterNFT={characterNFT} currentAccount={currentAccount} players={players} setPlayers={setPlayers} setBossHome={setBossHome} randomNumber={randomNumber} setNftDeathBoss={setNftDeathBoss} />);
     }
   }
 
